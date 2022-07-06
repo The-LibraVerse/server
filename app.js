@@ -24,11 +24,12 @@ const pool = require('./config/database')();
 
 const pgSession = new pgSessionStore({
     pool,
-    tableName: 'session'
+    tableName: 'sessions',
+    createTableIfMissing: true
 });
 const sessionConfig = {
     store:  pgSession,
-    name: 'ziltv.cookie',
+    name: 'libraverse.cookie',
     secret: config.sessionSecret,
     resave: false,
     saveUninitialized: false,

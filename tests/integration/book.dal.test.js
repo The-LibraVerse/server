@@ -1,6 +1,6 @@
 const dal = require('../../src/books/book.dal');
-const { faker } = require('@faker-js/faker');
 const { expect } = require('chai');
+const { faker } = require('@faker-js/faker');
 
 describe('Book data access layer', function() {
     it('Create and FetchByID', function() {
