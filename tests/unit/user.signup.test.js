@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const { faker } = require('@faker-js/faker');
 const { createStubs, stubUserModule, paths } = require('./user.stubs');
 
-describe.only('User module unit tests: Signup', function() {
+describe('User module unit tests: Signup', function() {
     it('Signup(): Call userDAL.create() if data has username & password', function() {
         const stubs = createStubs();
         const spy = stubs[paths.userDal].create;

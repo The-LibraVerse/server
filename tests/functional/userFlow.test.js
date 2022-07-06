@@ -5,10 +5,11 @@ const app = require('../../app');
 
 describe('Auth and user flow', function() {
     [
-        {title: 'username and password', data: {username: faker.internet.userName(), password: faker.internet.password()}},
-        {title: 'with address', data: {address: faker.finance.ethereumAddress()}}
+        {title: 'username and password',
+            data: {username: faker.internet.userName(), password: faker.internet.password()}},
+        {title: 'with ethereum address', data: {address: faker.finance.ethereumAddress()}}
     ].forEach(testArgs => {
-        it('Sign up with ' + testArgs.title + 'should return cookie', function() {
+        it('Sign up with ' + testArgs.title + ' should return cookie', function() {
             let cookie;
 
             return request(app).post('/signup').send(testArgs.data)
@@ -28,8 +29,6 @@ describe('Auth and user flow', function() {
                 });
         });
     });
-
-    it('Sign up with ethereum address');
 
     it('Sign up with username and password, and update with ethereum address');
 });

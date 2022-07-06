@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const { faker } = require('@faker-js/faker');
 const { createStubs, stubUserModule, paths } = require('./user.stubs');
 
-describe.only('User module unit tests: Login', function() {
+describe('User module unit tests: Login', function() {
     it('Login: call userDAL.fetchByUsername if data = {address, password}', function() {
         const data = {
             username: faker.internet.userName(),
@@ -32,11 +32,11 @@ describe.only('User module unit tests: Login', function() {
         const stubs = createStubs();
         stubs[paths.userDal].fetchByUsername = sinon.fake.resolves(data);
 
-        const reqObj = JSON.parse(faker.datatype.json());
         const spy = stubs[paths.session].create;
 
         const user = stubUserModule(stubs)
 
+        const reqObj = JSON.parse(faker.datatype.json());
         return user.login(data, reqObj)
             .then(() => {
                 sinon.assert.calledWith(spy, reqObj, data);

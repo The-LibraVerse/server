@@ -9,23 +9,24 @@ function normaliseResult(data) {
     }
 
     return data.map(datum => {
-        const { _id, title } = datum;
+        const { _id, title, author } = datum;
         return {
             id: _id,
             ...title && {title},
+            ...author && {author},
         }
     });
 }
 
 module.exports = {
     create(data) {
-        const query = `INSERT INTO ${table} (title) VALUES($1) RETURNING *`;
-        const values = [data.title];
+        const query = `INSERT INTO ${table} (title, author) VALUES($1, $2) RETURNING *`;
+        const values = [data.title, data.author];
 
         return db.query(query, values)
-        .then(res => {
-            return normaliseResult(res.rows)[0];
-        });
+            .then(res => {
+                return normaliseResult(res.rows)[0];
+            });
     },
 
     fetchByID(id) {
@@ -33,6 +34,21 @@ module.exports = {
         const values = [id];
 
         return db.query(query, values)
-        .then(res => normaliseResult(res.rows)[0]);
+            .then(res => normaliseResult(res.rows)[0]);
     },
+
+    fetchAll() {
+        const query = `SELECT * FROM ${table}`;
+
+        return db.query(query)
+            .then(res => normaliseResult(res.rows));
+    },
+
+    fetchByCreator(id) {
+        const query = `SELECT * FROM ${table} WHERE author=$1`;
+        const values = [id];
+
+        return db.query(query, values)
+            .then(res => normaliseResult(res.rows));
+    }
 }
