@@ -3,6 +3,7 @@ const { ClientError, UnauthorizedError } = require('../../src/errors');
 const sinon = require('sinon');
 const { faker } = require('@faker-js/faker');
 const { createStubs, stubBook, paths } = require('./book.stubs');
+const testData = require('../testData');
 
 describe('Testing book module', function() {
     it('Create(): call book DAL with book data provided', function() {
@@ -171,11 +172,18 @@ describe('Testing book module', function() {
 
         const stubs = createStubs();
         stubs[paths.bookDal].fetchByCreator = sinon.fake.resolves(creations);
+        stubs[paths.user].userDal.fetchByIDs = sinon.fake.resolves([{id: userID}]);
         const book = stubBook(stubs);
 
         return book.userBooks(userID)
             .then(res => {
-                expect(res).to.have.property('creations').that.is.eql(creations);
+                expect(res).to.have.property('creations').that.is.not.empty;
+
+                res.creations.forEach((c, i) => {
+                    expect(c.id).to.equal(creations[i].id);
+                    expect(c.author).to.have.property('id', userID);
+                    expect(c.title).to.equal(creations[i].title);
+                });
             });
     });
 
@@ -205,7 +213,76 @@ describe('Testing book module', function() {
             });
     });
 
-    it('CreatedBy', function() {
+    [
+        {name: 'FetchBook - fetch single book', fn: 'fetchBook', params: ['bookID'], fetchOne: true},
+        {name: 'FetchAll', fn: 'fetchAll', params: []},
+        {name: 'CreatedBy - user logged in', fn: 'createdBy', params: ['reqObj']},
+        {name: 'CreatedBy - user logged in', fn: 'createdBy', params: ['author']},
+        {name: 'UserBooks - user logged in', fn: 'userBooks', params: ['reqObj']},
+        {name: 'UserBooks - user logged in', fn: 'userBooks', params: ['author']}
+    ] .forEach(testArgs => {
+        it(testArgs.name + ': call userDAL for author information, and return author informaation', function() {
+            const numAuthors = faker.datatype.number({max: 10, min: 5});
+            const users = Array.from({length: numAuthors}).fill('a').map(() => testData.randomUser())
+
+            users.push(users[0]);
+            users.push(users[4]);
+            const authorIDs = users.map(u => u.id);
+
+            const books = authorIDs.map(author => ({
+                id: faker.datatype.number(100),
+                name: faker.commerce.productName(), author  }));
+
+            const paramsS = {
+                reqObj: JSON.parse(faker.datatype.json()),
+                author: authorIDs[0],
+                bookID: books[0].id,
+                user:  authorIDs[0]
+            }
+
+            const stubs = createStubs();
+            const spy = sinon.fake.resolves(users);
+            stubs[paths.user].userDal.fetchByIDs = spy;
+            stubs[paths.bookDal].fetchAll = sinon.fake.resolves(books);
+            stubs[paths.bookDal].fetchByID = sinon.fake.resolves(books[0]),
+            stubs[paths.bookDal].fetchByCreator = sinon.fake.resolves(books);
+            stubs[paths.session].get = sinon.fake.returns({userID: authorIDs[0]});
+            const book = stubBook(stubs);
+
+            const params = testArgs.params ? 
+                testArgs.params.map(p => paramsS[p]) : [];
+
+            return book[testArgs.fn](...params)
+                .then(res => {
+                    if(testArgs.fetchOne)
+                        sinon.assert.calledWith(spy, [authorIDs[0]]);
+                    else
+                        sinon.assert.calledWith(spy, [...new Set(authorIDs)]);
+
+                    let library = [];
+                    
+                    if(Array.isArray(res))
+                        library = res;
+                    else if(typeof library == 'object') {
+                        Object.values(res).forEach(a => {
+                            if(Array.isArray(a))
+                                library = [...library, ...a];
+                        });
+                    }
+
+                    expect(library).to.not.be.empty;
+                    library.forEach((b, index) => {
+                        const author = users[index];
+                        expect(b.author).to.have.property('id', author.id);
+                        expect(b.author).to.have.property('username', author.username);
+                        expect(b.author).to.have.property('name', author.name);
+                        expect(b.author).to.have.keys('id', 'username', 'name');
+                    });
+                });
+        });
+    });
+
+    it('CreatedBy should call dal.createdBy', function() {
         const userID = faker.datatype.number();
         const stubs = createStubs();
         const spy = stubs[paths.bookDal].fetchByCreator;

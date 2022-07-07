@@ -7,9 +7,9 @@ let promiseChain = db.query(`DELETE FROM books`)
     .then(() => db.query(`DELETE FROM users`))
 
 users.forEach(user => {
-    const query = `INSERT INTO users(_id, username, password, address) VALUES($1, $2, $3, $4)`;
+    const query = `INSERT INTO users(_id, name, username, password, address) VALUES($1, $2, $3, $4, $5)`;
     const values = [
-        user.id, user.username, user.password, user.address
+        user.id, user.name, user.username, user.password, user.address
     ];
     
     promiseChain = promiseChain.then(() => db.query(query, values));

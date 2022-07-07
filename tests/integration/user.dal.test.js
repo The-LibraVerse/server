@@ -83,4 +83,17 @@ describe('User data access layer tests', function() {
             expect(res).to.contain(user);
         });
     });
+
+    it('FetchByIDs()', function() {
+        const num = faker.datatype.number({max: 10, min: 5});
+        const users = Array.from({length: num}).fill('a').map(() => testData.randomUser())
+
+        const ids = users.map(u => u.id);
+
+        return dal.fetchByIDs(ids)
+        .then(res => {
+            expect(res).to.have.deep.members([
+                ...new Set(users)]);
+        });
+    });
 });

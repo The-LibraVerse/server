@@ -3,5 +3,6 @@ const userDAL = require('./user.dal');
 
 module.exports = {
     user,
-    userDAL
+    userDal: userDAL,
+    userDAL,
 }

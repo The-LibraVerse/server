@@ -5,10 +5,11 @@ function normaliseData(data) {
     const rows = (Array.isArray(data)) ? data : [data];
 
     return rows.map(datum => {
-        const { _id, username, password, address } = datum;
+        const { _id, name, username, password, address } = datum;
 
         return {
             id: _id,
+            ...name && {name},
             ...username && {username},
             ...password && {password},
             ...address && {address},
@@ -23,6 +24,17 @@ module.exports = {
 
         return db.query(query, values)
             .then(res => normaliseData(res.rows)[0]);
+    },
+
+    fetchByIDs(ids) {
+        ids = [...new Set(ids)];
+
+        // const query = `SELECT * from ${table} WHERE _id in $1`;
+        const query = `SELECT * FROM ${table} where _id in ('${ ids.join("', '") }')`;
+
+        return db.query(query)
+        // return db.query(query, [ids])
+            .then(res => normaliseData(res.rows));
     },
 
     fetchByID(id) {
