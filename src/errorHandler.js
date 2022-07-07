@@ -15,6 +15,8 @@ module.exports = function(e, req, res, next) {
     } else
         console.log(e);
 
+    console.log('client erro:', error);
+
     return res.send({
         error
     });

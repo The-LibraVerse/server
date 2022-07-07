@@ -7,6 +7,7 @@ const cors = require('cors');
 
 const config = require('./config');
 const routes = require('./src/routes');
+const errorHandler = require('./src/errorHandler');
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({extended: true}));
@@ -40,6 +41,7 @@ app.use(session(sessionConfig));
 
 // Routes
 app.use(routes);
+app.use(errorHandler);
 
 module.exports = app;
 

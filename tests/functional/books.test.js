@@ -32,4 +32,13 @@ describe('Books and chapters', function() {
                 expect(resOne[0]).to.contain(newBook);
             });
     });
+
+    it('View single book', function() {
+        const book = testData.books[2];
+
+        return request(app).get('/book/'+book.id)
+        .then(res => {
+            expect(res.body).to.contain(book);
+        });
+    });
 });

@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "lint": "eslint src/ tests/ -c ./.eslintrc.js",
+    "dev": "NODE_ENV=development && . ./.env.local && node ./bin/www.js",
     "test": "npm run lint && npm run test:unit && npm run test:integration && npm run test:functional --timeout 10000",
     "test:unit": ". ./.env.local.test && npm run lint && NODE_ENV=test mocha --require tests/__setup.js --require tests/unit/__hooks.js tests/unit/ --recursive --timeout 1000",
     "test:integration": ". ./.env.local.test && npm run lint && NODE_ENV=test mocha tests/integration/ --require tests/__setup.js --require tests/integration/__hooks.js --recursive --timeout 10000 --startupDB",

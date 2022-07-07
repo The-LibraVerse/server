@@ -33,7 +33,7 @@ module.exports = {
                         return res;
                     }
                     else throw new ClientError('Invalid username or password');
-                }
+                } else throw new ClientError('Account with that username does not exist');
             });
     }
 }

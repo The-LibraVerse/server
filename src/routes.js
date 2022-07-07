@@ -21,6 +21,12 @@ router.post('/books', function(req, res, next) {
         .catch(e => next(e));
 });
 
+router.get('/book/:id', function(req, res, next) {
+    return book.fetchBook(req.params.id)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
 router.get('/books', function(req, res, next) {
     return book.fetchAll()
         .then(payload => res.send(payload))

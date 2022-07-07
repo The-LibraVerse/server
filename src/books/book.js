@@ -56,6 +56,10 @@ module.exports = {
         return chapterDAL.deleteChapter(bookID, chapterID)
     },
 
+    fetchBook(bookID) {
+        return bookDal.fetchByID(bookID)
+    },
+
     fetchAll() {
         return bookDal.fetchAll()
     },
