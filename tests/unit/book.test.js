@@ -5,7 +5,7 @@ const { faker } = require('@faker-js/faker');
 const { createStubs, stubBook, paths } = require('./book.stubs');
 const testData = require('../testData');
 
-describe('Testing book module', function() {
+describe.only('Testing book module', function() {
     it('Create(): call book DAL with book data provided', function() {
         const spy = sinon.fake.resolves(true);
 
@@ -140,11 +140,6 @@ describe('Testing book module', function() {
     });
 
     it('AddChapter(): reject if content is missing', function() {
-        const dalSpy = sinon.fake.resolves(true);
-
-        const stubs = createStubs()
-        stubs[paths.chapterDal].create = dalSpy;
-
         const metadata = {
             title: faker.lorem.words(),
             cover: faker.image.image()
@@ -156,6 +151,66 @@ describe('Testing book module', function() {
 
         return expect(book.addChapter(faker.datatype.number(), {metadata }))
             .to.be.rejectedWith(ClientError);
+    });
+
+    it('FetchChapter(): Return chapter details', function() {
+        const chapter = testData.chapters[4];
+        const chapterID = chapter.id;
+        const bookID = faker.datatype.number();
+
+        const spy = sinon.fake.resolves(chapter);
+
+        const stubs = createStubs()
+        stubs[paths.chapterDal].fetchByID = spy;
+
+        const book = stubBook(stubs);
+
+        return book.fetchChapter(bookID, chapterID)
+            .then(res => {
+                sinon.assert.calledWith(spy, bookID, chapterID);
+                expect(res).to.have.property('id', chapter.id);
+                expect(res).to.have.property('title', chapter.title);
+                expect(res).to.have.property('cover', chapter.cover);
+                expect(res).to.have.keys('id', 'title', 'content', 'cover');
+            });
+    });
+
+    it('FetchChapter(): Return content url for chapter if browser is author', function() {
+        const author = faker.datatype.number();
+        const chapter = testData.chapters[4];
+        const chapterID = chapter.id;
+        const bookID = chapter.book;
+
+        const spy = sinon.fake.resolves(chapter);
+
+        const stubs = createStubs({getSession: author})
+        stubs[paths.chapterDal].fetchByID = spy;
+
+        const book = stubBook(stubs);
+
+        return book.fetchChapter(bookID, chapterID)
+            .then(res => {
+                sinon.assert.calledWith(spy, bookID, chapterID);
+                expect(res).to.have.property('contentURL', chapter.contentURL);
+                expect(res).to.have.keys('id', 'title', 'content', 'cover', 'contentURL');
+            });
+    });
+
+    it('FetchChapter(): Call fn for external fetches to get chapter content', function() {
+        const chapter = testData.chapters[4];
+
+        const spy = sinon.fake.resolves(chapter._content);
+
+        const stubs = createStubs()
+        stubs[paths.fetchExternal].fetch = spy;
+        stubs[paths.chapterDal].fetchByID = sinon.fake.resolves(chapter);
+
+        const book = stubBook(stubs);
+
+        return book.fetchChapter(faker.datatype.number(), faker.datatype.number())
+            .then(res => {
+                sinon.assert.calledWith(spy, chapter.contentURL);
+            });
     });
 
     it('DeleteChapter(): call chapter dal with delete()', function() {
@@ -286,7 +341,7 @@ describe('Testing book module', function() {
         });
     });
 
-    it('FetchBook: should return chapter ids and titles', function() {
+    it('FetchBook: should return chapters[] ids, cover and titles', function() {
         const author = 5;
         const bookID = 42
         const book = {
@@ -299,6 +354,7 @@ describe('Testing book module', function() {
                 id: index+71,
                 title: 'Chapter ' + (index + 1),
                 contentURL: faker.internet.url(),
+                cover: faker.image.image(),
                 bookID,
             }
         });
@@ -316,9 +372,45 @@ describe('Testing book module', function() {
 
                 expect(res).to.have.property('chapters').that.has.lengthOf(chapters.length);
                 res.chapters.forEach((c, i) => {
-                    expect(c).to.have.keys('id', 'title');
+                    expect(c).to.have.keys('id', 'title', 'cover');
                     expect(c).to.have.property('id', chapters[i].id);
                     expect(c).to.have.property('title', 'Chapter ' + (chapters[i].id - 70))
+                    expect(c).to.have.property('cover', chapters[i].cover);
+                });
+            });
+    });
+
+    it('FetchBook: should return chapters[] content urls if book author is browsing', function() {
+        const author = 5;
+        const bookID = 42
+        const book = {
+            id: faker.datatype.number(100),
+            name: faker.commerce.productName(), author 
+        };
+
+        const chapters = faker.datatype.array().map((_a, index) => {
+            return {
+                id: index+71,
+                title: 'Chapter ' + (index + 1),
+                contentURL: faker.internet.url(),
+                cover: faker.image.image(),
+                bookID,
+            }
+        });
+
+        const stubs = createStubs();
+        stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
+        stubs[paths.chapterDal].fetchAll = sinon.fake.resolves(chapters);
+        stubs[paths.session].get = sinon.fake.returns({userID: author});
+
+        const bookModule = stubBook(stubs);
+
+        return bookModule.fetchBook(bookID)
+            .then(res => {
+                expect(res).to.have.property('chapters').that.has.lengthOf(chapters.length);
+                res.chapters.forEach((c, i) => {
+                    expect(c).to.have.keys('id', 'title', 'cover', 'contentURL');
+                    expect(c).to.have.property('contentURL', chapters[i].contentURL);
                 });
             });
     });

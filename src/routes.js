@@ -39,14 +39,27 @@ router.post('/books', function(req, res, next) {
         .catch(e => next(e));
 });
 
+/** Fetch single book
+ */
 router.get('/book/:id', function(req, res, next) {
-    return book.fetchBook(req.params.id)
+    return book.fetchBook(req.params.id, req)
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });
 
+/** Create chapter
+ */
 router.post('/book/:id/chapter', function(req, res, next) {
     return book.addChapter(req.params.id, req.body, req)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
+/** Get chapter
+ */
+router.get('/book/:bookID/chapter/:chapterID', function(req, res, next) {
+    console.log('params:', req.params);
+    return book.fetchChapter(req.params.bookID, req.params.chapterID, req)
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });

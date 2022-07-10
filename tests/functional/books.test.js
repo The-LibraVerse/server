@@ -9,7 +9,7 @@ describe('Books and chapters', function() {
         const user = testData.users[3];
         const newBook = { title: faker.commerce.productName() };
         const chapter = {title: faker.music.genre(), content: faker.internet.url()}
-        let bookID;
+        let bookID, chapterID;
         const { username, password } = user;
         let cookie;
 
@@ -40,6 +40,7 @@ describe('Books and chapters', function() {
                 return request(app).post('/book/' + bookID + '/chapter').send(chapter).set('Cookie', cookie);
             }).then(res => {
                 expect(res.body).to.have.property('id').that.is.a('number');
+                chapterID = res.body.id;
                 return request(app).get('/book/' + bookID);
             }).then(res => {
                 expect(res.body).to.have.property('totalChapters', 1);
@@ -50,6 +51,7 @@ describe('Books and chapters', function() {
 
     it('View single book', function() {
         const book = testData.books[1];
+        const chapter = testData.chapters[4]
 
         return request(app).get('/book/'+book.id)
         .then(res => {
@@ -57,6 +59,16 @@ describe('Books and chapters', function() {
             expect(res.body).to.have.property('title', book.title);
             expect(res.body).to.have.property('totalChapters')
                 .that.is.at.least(8);
+
+            return request(app).get('/book/' + book.id + '/chapter/' + chapter.id);
+            // return request(app).get('/book/' + bookID + '/chapter' + chapterID).set('Cookie', cookie);
+        }).then(res => {
+            expect(res.status).to.equal(200);
+            console.log('res. status:', res.status);
+            expect(res.body).to.contain({
+                id: chapter.id,
+                content: chapter._content,
+            });
         });
     });
 });

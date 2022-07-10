@@ -8,10 +8,12 @@ for (let i=0; i<30; i++) {
 
     const id = i+1;
     const title = faker.music.songName();
+    const cover = faker.image.image();
 
     books.push({
         id,
         author,
+        cover,
         title
     });
 }

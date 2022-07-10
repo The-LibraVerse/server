@@ -1,11 +1,21 @@
 const sinon = require('sinon');
 const { faker } = require('@faker-js/faker');
 
-module.exports = function() {
+module.exports = function(results={}) {
+    const getSession = results.getSession ?
+        typeof results.getSession == 'number' ? {userID: results.getSession} :
+            results.getSession :
+        null;
+
+    const externalFetch= {
+        fetch: sinon.fake.resolves(true),
+    };
     return {
+        externalFetch,
+        fetchExternal: externalFetch,
         sessionManager: {
             create: sinon.fake.returns(true),
-            get: sinon.fake.returns(false),
+            get: (getSession) ? sinon.fake.returns(getSession) : sinon.fake.returns(false),
         },
         userDal: {
             create: sinon.fake.resolves({id: 3}),

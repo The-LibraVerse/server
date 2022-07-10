@@ -2,7 +2,7 @@ const dal = require('../../src/books/chapter.dal');
 const { expect } = require('chai');
 const { faker } = require('@faker-js/faker');
 
-describe.only('Chapter data access layer', function() {
+describe('Chapter data access layer', function() {
     it('Create and FetchByID', function() {
         const title = faker.lorem.words();
         const bookID = 2;

@@ -1,8 +1,33 @@
+const externalFetch = require('../externalFetch');
 const bookDal = require('./book.dal');
 const { userDal } = require('../user');
 const chapterDAL = require('./chapter.dal');
 const sessionManager = require('../sessionManager');
 const { ClientError, UnauthorizedError } = require('../errors');
+
+function formatChapter(c) {
+    const { title, id, contentURL, content, cover } = c;
+    return {
+        id,
+        title,
+        cover,
+        ...contentURL && {contentURL},
+        ...content && {content},
+    }
+}
+
+function formatBook(b) {
+    const { id, title, cover  } = b;
+
+    let author = (typeof b.author == 'number') ?  {id: b.author} :
+        (typeof b.author == 'string') ?  {id: b.author} :
+        (typeof b.author == 'object') ? b.author : null;
+
+    return {
+        id, title, cover,
+        author,
+    }
+}
 
 function fetchAuthors(books) {
     let authorIDs = books.map(i => i.author);
@@ -18,9 +43,8 @@ function fetchAuthors(books) {
             });
 
             return books.map(b => {
-                const { id, title } = b;
-
-                const authorDeets = authors[b.author];
+                b = formatBook(b);
+                const authorDeets = authors[b.author.id];
 
                 const author = {
                     id: b.author
@@ -36,7 +60,7 @@ function fetchAuthors(books) {
                 }
 
                 return {
-                    id, title,
+                    ...b,
                     author,
                 }
             });
@@ -117,14 +141,38 @@ module.exports = {
                     return chapterDAL.create(bookID, content, metadata) 
             });
     },
+
+    fetchChapter(bookID, chapterID, reqObj) {
+        const session = sessionManager.get(reqObj);
+
+        let chapter = {};
+        return chapterDAL.fetchByID(bookID, chapterID)
+            .then(res => {
+                chapter = formatChapter(res);
+                return externalFetch.fetch(chapter.contentURL)
+            })
+            .then(res => {
+                chapter.content = res;
+
+                delete chapter.contentURL;
+                return chapter;
+            });
+    },
+
     deleteChapter(bookID, chapterID) {
         return chapterDAL.deleteChapter(bookID, chapterID)
     },
 
-    fetchBook(bookID) {
-        let totalChapters=0, chapters = [];
+    fetchBook(bookID, reqObj) {
+        const session = sessionManager.get(reqObj);
 
-        return chapterDAL.fetchCount(bookID)
+        let totalChapters=0, chapters = [], book;
+
+        return bookDal.fetchByID(bookID)
+        .then(res => {
+            book = res;
+            return chapterDAL.fetchCount(bookID)
+        })
             .then(res => {
                 if(!res)
                     totalChapters = 0;
@@ -133,14 +181,13 @@ module.exports = {
                 return chapterDAL.fetchAll(bookID)
             }).then(res => {
                 chapters = res.map(c => {
-                    const { title, id } = c;
-                    return {
-                        title, id
-                    }
+                    if(session.userID != book.author)
+                        delete c.contentURL;
+                    return formatChapter(c)
                 });
-                return bookDal.fetchByID(bookID)
+
+                return fetchAuthors([book])
             })
-            .then(res => fetchAuthors([res]))
             .then(res => {
                 res = res[0];
 

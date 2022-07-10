@@ -2,7 +2,8 @@ const { seedDatabase } = require('../testData');
 
 exports.mochaHooks = {
     beforeEach() {
-        return seedDatabase;
+        this.timeout(20000);
+        return seedDatabase();
     }
 }
 

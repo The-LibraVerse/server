@@ -9,9 +9,10 @@ function normaliseResult(data) {
     }
 
     return data.map(datum => {
-        const { _id, title, author } = datum;
+        const { _id, cover,title, author } = datum;
         return {
             id: _id,
+            ...cover && {cover},
             ...title && {title},
             ...author && {author},
         }

@@ -10,6 +10,9 @@ const paths = {
     userDal: '../user',
     bookDal: './book.dal',
     chapterDal: './chapter.dal',
+    chapterDAL: './chapter.dal',
+    externalFetch: '../externalFetch',
+    fetchExternal: '../externalFetch',
 }
 
 const bookPath = '../../src/books/book';
@@ -23,6 +26,7 @@ function createStubs() {
         },
         [paths.bookDal]: allStubs.bookDal,
         [paths.chapterDal]: allStubs.chapterDal,
+        [paths.fetchExternal]: allStubs.fetchExternal,
     }
 }
 
