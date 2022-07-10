@@ -3,6 +3,17 @@ const sessionManager = require('../sessionManager');
 const { ClientError, UnauthorizedError } = require('../errors');
 
 module.exports = {
+    checkAuth(reqObj) {
+        const session = sessionManager.get(reqObj);
+
+        const response = {logged_in: false};
+
+        if(session && session.userID)
+            response.logged_in = true;
+
+        return Promise.resolve(response);
+    },
+
     signup(data, reqObj) {
         if(!data.address && !(data.username && data.password))
             return Promise.reject( new ClientError('Invalid signup data. Send either username and password, or sign message with your ethereum wallet'));
@@ -35,5 +46,32 @@ module.exports = {
                     else throw new ClientError('Invalid username or password');
                 } else throw new ClientError('Account with that username does not exist');
             });
+    },
+
+    fetch(param) {
+        let userID;
+
+        if(typeof param == 'number' ||
+            (typeof param == 'string' && !isNaN(param)))
+            userID = param;
+
+        else {
+            const session = sessionManager.get(param)
+            if(!session)
+                return Promise.reject(new UnauthorizedError('You are not logged in.'));
+
+            userID = session.userID;
+        }
+
+        if(!userID)
+            return Promise.reject("Invalid search: " + param + ". Please specify a user ");
+
+        return dal.fetchByID(userID)
+        .then(res => {
+            const { id, name, username, address} = res;
+            return {
+                id, name, username, address
+            }
+        });
     }
 }

@@ -2,6 +2,7 @@ const { expect } = require('chai');
 const { faker } = require('@faker-js/faker');
 const request = require('supertest');
 const app = require('../../app');
+const testData = require('../testData');
 
 describe('Auth and user flow', function() {
     [
@@ -29,6 +30,24 @@ describe('Auth and user flow', function() {
                 });
         });
     });
+
+    it('Auth route: Return false if user is not logged in', function() {
+        return request(app).get('/auth')
+            .then(res => {
+                expect(res.body).to.eql({logged_in: false});
+            });
+    })
+
+    it('Auth route: Return true if user is logged in', function() {
+        return request(app).post('/login').send(testData.users[0])
+            .then(res => {
+                const cookie = res.headers['set-cookie'][0];
+                return request(app).get('/auth').set('Cookie', cookie)
+            })
+            .then(res => {
+                expect(res.body).to.eql({logged_in: true});
+            });
+    })
 
     it('Sign up with username and password, and update with ethereum address');
 });

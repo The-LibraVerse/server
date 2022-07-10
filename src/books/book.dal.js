@@ -37,6 +37,18 @@ module.exports = {
             .then(res => normaliseResult(res.rows)[0]);
     },
 
+    fetchAuthorID(id) {
+        const query = `SELECT author from ${table} where _id=$1`;
+        const values = [id];
+
+        return db.query(query, values)
+            .then(res => {
+                if(res.rows[0])
+                    return res.rows[0].author;
+                else return null;
+            });
+    },
+
     fetchAll() {
         const query = `SELECT * FROM ${table}`;
 

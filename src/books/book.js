@@ -10,35 +10,37 @@ function fetchAuthors(books) {
     authorIDs = [...new Set(authorIDs)];
 
     return userDal.fetchByIDs(authorIDs)
-    .then(res => {
-        const authors = {};
+        .then(res => {
+            const authors = {};
 
-        res.forEach(u => {
-            authors[u.id] = u;
+            res.forEach(u => {
+                authors[u.id] = u;
+            });
+
+            return books.map(b => {
+                const { id, title } = b;
+
+                const authorDeets = authors[b.author];
+
+                const author = {
+                    id: b.author
+                }
+
+                if(authorDeets) {
+                    if(authorDeets.id)
+                        author.id = authorDeets.id;
+                    if(authorDeets.name)
+                        author.name = authorDeets.name;
+                    if(authorDeets.username)
+                        author.username = authorDeets.username;
+                }
+
+                return {
+                    id, title,
+                    author,
+                }
+            });
         });
-
-        return books.map(b => {
-            const { id, title } = b;
-
-            const authorDeets = authors[b.author];
-
-            const author = {}
-
-            if(authorDeets) {
-                if(authorDeets.id)
-                    author.id = authorDeets.id;
-                if(authorDeets.name)
-                    author.name = authorDeets.name;
-                if(authorDeets.username)
-                    author.username = authorDeets.username;
-            }
-
-            return {
-                id, title,
-                author,
-            }
-        });
-    });
 }
 
 function createdBy(param) {
@@ -82,31 +84,78 @@ module.exports = {
                 throw e
             })
     },
-    addChapter(data) {
-        const metadata = data.metadata;
+    /**
+     * data.content should be an ipfs url or hash
+     */
+    addChapter(bookID, data, sessionObj) {
+        let metadata = data.metadata;
         const content = data.content;
 
         if(!content)
             return Promise.reject( new ClientError('Chapter content not included'));
 
-        return chapterDAL.create(metadata, content)
+        const session = sessionManager.get(sessionObj);
+
+        if(!session)
+            return Promise.reject(new UnauthorizedError('You are not logged in.'));
+
+        return (() => {
+            if(!metadata)
+                metadata = {}
+            if(!metadata.title) {
+                return chapterDAL.fetchCountForBook(bookID)
+                    .then(count => {
+                        metadata.title = 'Chapter ' + (count + 1);
+                    });
+            } else return Promise.resolve();
+        })()
+            .then(() => bookDal.fetchAuthorID(bookID))
+            .then(res => {
+                if(res != session.userID)
+                    return Promise.reject(new UnauthorizedError('You do not have permission to do this.'));
+                else
+                    return chapterDAL.create(bookID, content, metadata) 
+            });
     },
     deleteChapter(bookID, chapterID) {
         return chapterDAL.deleteChapter(bookID, chapterID)
     },
 
     fetchBook(bookID) {
-        return bookDal.fetchByID(bookID)
-        .then(res => {
-            return fetchAuthors([res])
-        })
+        let totalChapters=0, chapters = [];
+
+        return chapterDAL.fetchCount(bookID)
+            .then(res => {
+                if(!res)
+                    totalChapters = 0;
+                else totalChapters = res;
+
+                return chapterDAL.fetchAll(bookID)
+            }).then(res => {
+                chapters = res.map(c => {
+                    const { title, id } = c;
+                    return {
+                        title, id
+                    }
+                });
+                return bookDal.fetchByID(bookID)
+            })
+            .then(res => fetchAuthors([res]))
+            .then(res => {
+                res = res[0];
+
+                return {...res,
+                    chapters,
+                    totalChapters
+                };
+            });
     },
 
     fetchAll() {
         return bookDal.fetchAll()
-        .then(res => {
-            return fetchAuthors(res)
-        })
+            .then(res => {
+                return fetchAuthors(res)
+            })
     },
 
     userBooks(param) {

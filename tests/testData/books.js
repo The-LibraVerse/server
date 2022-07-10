@@ -7,7 +7,7 @@ for (let i=0; i<30; i++) {
     const author = users[userIndex].id;
 
     const id = i+1;
-    const title = faker.random.words();
+    const title = faker.music.songName();
 
     books.push({
         id,

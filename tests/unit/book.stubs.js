@@ -1,6 +1,7 @@
 const { faker } = require('@faker-js/faker');
 const proxyquire = require('proxyquire');
 const sinon = require('sinon');
+const masterStubs = require('./stubs');
 
 const paths = {
     session: '../sessionManager',
@@ -14,34 +15,14 @@ const paths = {
 const bookPath = '../../src/books/book';
 
 function createStubs() {
+    const allStubs = masterStubs();
     return {
-        [paths.session]: {
-            create: sinon.fake.returns(true),
-            get: sinon.fake.returns(false),
-        },
+        [paths.session]: allStubs.sessionManager,
         [paths.userDal]: {
-            userDal: {
-                fetchByIDs: sinon.fake.resolves([{id: faker.datatype.number()}]),
-                fetchByID: sinon.fake.resolves({id: faker.datatype.number()}),
-                fetchByUsername: sinon.fake.resolves({
-                    id: faker.datatype.number(),
-                    username: faker.internet.userName(),
-                    password: faker.internet.password()
-                }),
-            },
+            userDal: allStubs.userDal,
         },
-        [paths.bookDal]: {
-            create: sinon.fake.resolves({id: 3}),
-            fetchByID: sinon.fake.resolves({}),
-            fetchByCreator: sinon.fake.resolves([]),
-            fetchAll: sinon.fake.resolves([]),
-            latestChapter: sinon.fake.resolves({id: faker.datatype.number()}),
-        },
-        [paths.chapterDal]: { create: sinon.fake.resolves({
-            id: faker.datatype.number()}),
-            deleteChapter: sinon.fake.resolves(true)
-
-        },
+        [paths.bookDal]: allStubs.bookDal,
+        [paths.chapterDal]: allStubs.chapterDal,
     }
 }
 

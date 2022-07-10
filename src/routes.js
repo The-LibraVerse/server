@@ -3,6 +3,12 @@ const book = require('./books/book');
 const { user } = require('./user');
 const errorHandler = require('./errorHandler');
 
+router.get('/auth', function(req, res, next) {
+    return user.checkAuth(req)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
 router.post('/signup', function(req, res, next) {
     return user.signup(req.body, req)
         .then(payload => res.send(payload))
@@ -15,6 +21,18 @@ router.post('/login', function(req, res, next) {
         .catch(e => next(e));
 });
 
+router.get('/user', function(req, res, next) {
+    return user.fetch(req)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
+router.get('/user/:id', function(req, res, next) {
+    return user.fetch(req.params.id)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
 router.post('/books', function(req, res, next) {
     return book.create(req.body, req)
         .then(payload => res.send(payload))
@@ -23,6 +41,12 @@ router.post('/books', function(req, res, next) {
 
 router.get('/book/:id', function(req, res, next) {
     return book.fetchBook(req.params.id)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
+router.post('/book/:id/chapter', function(req, res, next) {
+    return book.addChapter(req.params.id, req.body, req)
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });

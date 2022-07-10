@@ -1,6 +1,7 @@
 const { faker } = require('@faker-js/faker');
 const proxyquire = require('proxyquire');
 const sinon = require('sinon');
+const masterStubs = require('./stubs');
 
 const paths = {
     userDal: './user.dal',
@@ -10,21 +11,11 @@ const paths = {
 const userPath = '../../src/user/user';
 
 function createStubs() {
+    const allStubs = masterStubs();
+
     return {
-        [paths.session]: {
-            create: sinon.fake.returns(true),
-            get: sinon.fake.returns(false),
-        },
-        [paths.userDal]: {
-            create: sinon.fake.resolves({id: 3}),
-            update: sinon.fake.resolves({id: faker.datatype.number()}),
-            fetchByID: sinon.fake.resolves({id: faker.datatype.number()}),
-            fetchByUsername: sinon.fake.resolves({
-                id: faker.datatype.number(),
-                username: faker.internet.userName(),
-                password: faker.internet.password()
-            }),
-        },
+        [paths.session]: allStubs.sessionManager,
+        [paths.userDal]: allStubs.userDal,
     }
 }
 

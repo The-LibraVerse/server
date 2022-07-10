@@ -18,7 +18,7 @@ switch(process.env.NODE_ENV) {
 }
 
 if(!config.port)
-    config.port = process.env.PORT || 3076;
+    config.port = process.env.PORT || 3078;
 
 config = {
     ...config, 
