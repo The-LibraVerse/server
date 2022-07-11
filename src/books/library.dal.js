@@ -6,7 +6,8 @@ function normalise(results) {
         results = [results];
 
     return results.map(lib => {
-        const { user_id, book_id, id, title, cover, author } = lib;
+        const { user_id, book_id, id, title, cover, author,
+            for_sale:forSale, date_added: dateAdded } = lib;
 
         return {
             userID: user_id,
@@ -14,6 +15,8 @@ function normalise(results) {
             bookTitle: title,
             bookCover: cover,
             bookAuthor: author,
+            dateAdded,
+            ...(forSale != null) && {forSale},
         }
     });
 }

@@ -1,6 +1,14 @@
 const db = require('../../config/database')();
 const table = 'chapters';
 
+const columnAliases = {
+    title: 'title',
+    cover: 'cover',
+    published: 'published',
+    metadataHash: 'metadata_hash',
+    metadataURI: 'metadata_uri',
+}
+
 function normaliseResult(data) {
     let returnObj = false;
     if(!Array.isArray(data)) {
@@ -9,13 +17,21 @@ function normaliseResult(data) {
     }
 
     return data.map(datum => {
-        const { _id, content_ipfs_url: contentURL, title, cover, book_id: bookID, author } = datum;
+        const { _id, content_ipfs_url: contentURL, title, cover,
+            book_id:bookID, author,
+            published, for_sale:forSale,
+            metadata_uri:metadataURI, metadata_hash:metadataHash  } = datum;
+
         return {
             id: _id,
             ...contentURL && {contentURL},
             ...title && {title},
             ...cover && {cover},
             ...bookID && {bookID},
+            ...(published != null) && {published},
+            ...(forSale != null) && {forSale},
+            ...metadataURI && {metadataURI},
+            ...metadataHash && {metadataHash},
         }
     });
 }
@@ -45,10 +61,38 @@ module.exports = {
             .then(res => normaliseResult(res.rows)[0]);
     },
 
-    fetchByID(bookID, chapterID) {
-        const query = `SELECT * FROM ${table} WHERE book_id=$1 AND _id=$2`;
+    update(id, data) {
+        // const columns = ['title', 'cover', 'metadataHash'];
+        const values = [id];
+
+        let i = 2;
+        let setColStr = '';
+
+        for(let alias in columnAliases) {
+            if(data[alias]) {
+                if(i > 2)
+                    setColStr += ', ';
+
+                values.push(data[alias]);
+                setColStr += ' '  + columnAliases[alias] + ' = $' + i;
+                i++;
+            }
+        }
+
+        const query = `UPDATE ${table}
+            SET ${setColStr}
+        WHERE _id = $1 RETURNING *`;
+
+        return db.query(query, values)
+            .then(res => {
+                return normaliseResult(res.rows)[0];
+            });
+    },
+
+    fetchByID(chapterID) {
+        const query = `SELECT * FROM ${table} WHERE _id=$1`;
         const values = [
-            bookID, chapterID
+            chapterID
         ]
 
         return db.query(query, values)

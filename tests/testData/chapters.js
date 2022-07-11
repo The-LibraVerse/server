@@ -13,6 +13,9 @@ for (let i = 0; i<7; i++) {
     const contentURL = faker.internet.url();
     const cover = faker.image.image();
     const title = faker.word.interjection();
+    const forSale = faker.datatype.boolean();
+    const published = (i < 3) ? false : faker.datatype.boolean();
+    const metadataURI = faker.internet.url();
 
     chapters.push({
         _content,
@@ -20,7 +23,10 @@ for (let i = 0; i<7; i++) {
         id,
         bookID,
         title,
-        contentURL
+        contentURL,
+        forSale,
+        published,
+        metadataURI,
     });
 
 }

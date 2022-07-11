@@ -33,6 +33,10 @@ router.get('/user/:id', function(req, res, next) {
         .catch(e => next(e));
 });
 
+/**
+ * BOOKS
+ */
+
 router.post('/books', function(req, res, next) {
     return book.create(req.body, req)
         .then(payload => res.send(payload))
@@ -51,23 +55,6 @@ router.get('/book/:id', function(req, res, next) {
  */
 router.get('/book/:id/add-to-library', function(req, res, next) {
     return book.addToLibrary(req.params.id, req)
-        .then(payload => res.send(payload))
-        .catch(e => next(e));
-});
-
-/** Create chapter
- */
-router.post('/book/:id/chapter', function(req, res, next) {
-    return book.addChapter(req.params.id, req.body, req)
-        .then(payload => res.send(payload))
-        .catch(e => next(e));
-});
-
-/** Get chapter
- */
-router.get('/book/:bookID/chapter/:chapterID', function(req, res, next) {
-    console.log('params:', req.params);
-    return book.fetchChapter(req.params.bookID, req.params.chapterID, req)
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });
@@ -98,6 +85,38 @@ router.get('/user/:id/books', function(req, res, next) {
 
 router.get('/user/:id/books/creations', function(req, res, next) {
     return book.createdBy(req.params.id)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
+router.post('/book/:id/sell', function(req, res, next) {
+    return book.listForSale(req.params.id, req.body, req)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
+router.post('/book/:bookID/chapter/:chapterID/sell', function(req, res, next) {
+    return book.listChapterForSale(req.params.bookID, req.params.chapterID, req.body, req)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
+/**
+ * CHAPTERS
+ */
+/** Create chapter
+ */
+router.post('/book/:id/chapter', function(req, res, next) {
+    return book.addChapter(req.params.id, req.body, req)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
+/** Get chapter
+ */
+router.get('/book/:bookID/chapter/:chapterID', function(req, res, next) {
+    console.log('params:', req.params);
+    return book.fetchChapter(req.params.bookID, req.params.chapterID, req)
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });

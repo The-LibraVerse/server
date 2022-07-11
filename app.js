@@ -43,5 +43,9 @@ app.use(session(sessionConfig));
 app.use(routes);
 app.use(errorHandler);
 
+// Check that ipfs gateway is present
+const ipfs = require('./src/api/ipfs');
+ipfs.getGateway();
+
 module.exports = app;
 

@@ -23,14 +23,23 @@ function main() {
             .then(db.query(`SELECT setval('"users__id_seq"', 55);`))
     });
 
+    // console.log('seeding db with books:', books);
+
     books.forEach(book => {
-        const query = `INSERT INTO books(_id, title, cover, author) VALUES ($1, $2, $3, $4)`;
+        const query = `INSERT INTO books(_id, title, cover, author,
+            for_sale, published,
+            metadata_uri, metadata_hash)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
+
         const values = [
-            book.id, book.title, book.cover, book.author
+            book.id, book.title, book.cover, book.author,
+            book.forSale, book.published,
+            book.metadataURI, book.metadataHash,
         ];
 
         promiseChain = promiseChain.then(() => db.query(query, values))
             .then(db.query(`SELECT setval('"books__id_seq"', 50);`))
+            // .catch(e => console.log('e:', e));
     });
 
     libraries.forEach(library => {
@@ -57,13 +66,17 @@ function main() {
 
             let chapterPromise = Promise.resolve();
             chapters.forEach(chapter => {
-                const query = `INSERT INTO chapters(_id, book_id, content_ipfs_url, title, cover) VALUES ($1, $2, $3, $4, $5)`;
+                const query = `INSERT INTO chapters(_id, book_id, content_ipfs_url, title, cover, for_sale, published, metadata_uri) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
                 const values = [
-                    chapter.id, chapter.bookID, chapter.contentURL, chapter.title, chapter.cover
+                    chapter.id, chapter.bookID, chapter.contentURL, chapter.title, chapter.cover,
+                    chapter.forSale, chapter.published, chapter.metadataURI,
+
                 ];
 
                 chapterPromise = chapterPromise.then(() => db.query(query, values))
                     .then(db.query(`SELECT setval('"chapters__id_seq"', 50);`))
+                    .catch(e => e);
+                // .catch(e => console.log('e:', e));
             })
 
             return chapterPromise;

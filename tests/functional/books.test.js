@@ -58,7 +58,7 @@ describe('Books and chapters', function() {
             expect(res.body).to.have.property('id', book.id);
             expect(res.body).to.have.property('title', book.title);
             expect(res.body).to.have.property('totalChapters')
-                .that.is.at.least(8);
+                .that.is.at.least(3);
 
             return request(app).get('/book/' + book.id + '/chapter/' + chapter.id);
             // return request(app).get('/book/' + bookID + '/chapter' + chapterID).set('Cookie', cookie);

@@ -1,4 +1,6 @@
 const externalFetch = require('../externalFetch');
+const ipfsAPI = require('../api/ipfs');
+
 const bookDal = require('./book.dal');
 const libraryDal = require('../books/library.dal');
 const { userDal } = require('../user');
@@ -7,18 +9,25 @@ const sessionManager = require('../sessionManager');
 const { ClientError, UnauthorizedError } = require('../errors');
 
 function formatChapter(c) {
-    const { title, id, contentURL, content, cover } = c;
+    const { title, id, contentURL, content, cover,
+        published, forSale, metadataURI, metadataHash,  } = c;
+
     return {
         id,
         title,
         cover,
         ...contentURL && {contentURL},
         ...content && {content},
+        ...(published != null) && {published},
+        ...(forSale != null) && {forSale},
+        metadataURI: metadataURI || null,
+        metadataHash,
     }
 }
 
 function formatBook(b) {
-    const { id, title, cover  } = b;
+    const { id, title, cover,
+        published, forSale, metadataURI } = b;
 
     let author = (typeof b.author == 'number') ?  {id: b.author} :
         (typeof b.author == 'string') ?  {id: b.author} :
@@ -27,6 +36,9 @@ function formatBook(b) {
     return {
         id, title, cover,
         author,
+        ...(published != null) && {published},
+        ...(forSale != null) && {forSale},
+        ...metadataURI && {metadataURI},
     }
 }
 
@@ -129,6 +141,34 @@ module.exports = {
                 throw e
             })
     },
+
+    publish(bookID, reqObj) {
+        return bookDal.fetchByID(bookID)
+        .then(res => {
+            const metadata = {
+                name: res.title,
+                image: res.cover,
+            };
+
+            return ipfsAPI.uploadSingle(JSON.stringify(metadata))
+        }).then(res => {
+            return bookDal.update(bookID, {metadataHash: res.cidv1, published: true})
+        });
+    },
+
+    publishChapter(chapterID, reqObj) {
+        return chapterDAL.fetchByID(chapterID)
+            .then(res => {
+                const metadata = {
+                    name: res.title,
+                    image: res.cover,
+                };
+
+                return ipfsAPI.uploadSingle(JSON.stringify(metadata))
+            }).then(res => {
+                return chapterDAL.update(chapterID, {metadataHash: res.cidv1, published: true})
+            });
+    },
     /**
      * data.content should be an ipfs url or hash
      */
@@ -174,7 +214,8 @@ module.exports = {
         const session = sessionManager.get(reqObj);
 
         let chapter = {};
-        return chapterDAL.fetchByID(bookID, chapterID)
+        return chapterDAL.fetchByID(chapterID)
+        // return chapterDAL.fetchByID(bookID, chapterID)
             .then(res => {
                 chapter = formatChapter(res);
                 return externalFetch.fetch(chapter.contentURL)
@@ -184,6 +225,9 @@ module.exports = {
                 chapter.book = {
                     id: bookID
                 }
+
+                if(chapter.metadataHash)
+                    chapter.metadataURI = ipfsAPI.hashToURL(chapter.metadataHash);
 
                 delete chapter.contentURL;
                 return chapter;
@@ -200,10 +244,13 @@ module.exports = {
         let totalChapters=0, chapters = [], book;
 
         return bookDal.fetchByID(bookID)
-        .then(res => {
-            book = res;
-            return chapterDAL.fetchCount(bookID)
-        })
+            .then(res => {
+                book = res;
+                if(book.metadataHash)
+                    book.metadataURI = ipfsAPI.hashToURL(book.metadataHash);
+
+                return chapterDAL.fetchCount(bookID)
+            })
             .then(res => {
                 if(!res)
                     totalChapters = 0;
@@ -256,13 +303,17 @@ module.exports = {
                 return libraryDal.fetch(userID)
             })
             .then(res => {
+                // console.log('res:', res);
                 myBooks.library = res.map(e => {
-                    const { bookTitle: title, bookID:id, bookCover: cover, bookAuthor: author } = e;
+                    const { bookTitle: title, bookID:id, bookCover: cover, bookAuthor: author,
+                        forSale,
+                    } = e;
 
                     return {
                         title,
                         id,
                         cover,
+                        forSale,
                         author
                     }
                 })

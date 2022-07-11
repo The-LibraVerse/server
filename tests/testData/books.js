@@ -10,27 +10,23 @@ for (let i=0; i<30; i++) {
     const title = faker.music.songName();
     const cover = faker.image.image();
 
+    const published = (i % 5 == 2) ? false :
+        (i == 3) ? true : faker.datatype.boolean()
+
+    const forSale = !published ? false : faker.datatype.boolean();
+    const metadataURI = !published ? null : faker.internet.url();
+    const metadataHash = !published ? null : 'bafybe' + faker.random.alphaNumeric(53);
+
     books.push({
         id,
         author,
         cover,
-        title
+        title,
+        published,
+        forSale,
+        metadataURI,
+        metadataHash,
     });
 }
 
-const library = [];
-
-for (let i = 0; i<50; i++) {
-    const userIndex = (i < 5) ? 0 :  Math.floor(Math.random() * users.length);
-    const userID = users[userIndex].id;
-
-    const bookIndex = (i < 5) ? 0 :  Math.floor(Math.random() * books.length);
-    const bookID = books[bookIndex].id;
-
-    library.push({
-        userID,
-        bookID,
-    })
-}
-
-module.exports = books;
+module.exports = Object.freeze(books);
