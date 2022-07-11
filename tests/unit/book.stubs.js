@@ -4,15 +4,16 @@ const sinon = require('sinon');
 const masterStubs = require('./stubs');
 
 const paths = {
-    session: '../sessionManager',
-    user: '../user',
-    userModule: '../user',
-    userDal: '../user',
     bookDal: './book.dal',
     chapterDal: './chapter.dal',
     chapterDAL: './chapter.dal',
     externalFetch: '../externalFetch',
     fetchExternal: '../externalFetch',
+    libraryDal: '../books/library.dal',
+    session: '../sessionManager',
+    user: '../user',
+    userModule: '../user',
+    userDal: '../user',
 }
 
 const bookPath = '../../src/books/book';
@@ -25,6 +26,7 @@ function createStubs() {
             userDal: allStubs.userDal,
         },
         [paths.bookDal]: allStubs.bookDal,
+        [paths.libraryDal]: allStubs.libraryDal,
         [paths.chapterDal]: allStubs.chapterDal,
         [paths.fetchExternal]: allStubs.fetchExternal,
     }

@@ -29,6 +29,9 @@ module.exports = {
     fetchByIDs(ids) {
         ids = [...new Set(ids)];
 
+        if(ids.length == 0)
+            return Promise.resolve([]);
+
         // const query = `SELECT * from ${table} WHERE _id in $1`;
         const query = `SELECT * FROM ${table} where _id in ('${ ids.join("', '") }')`;
 

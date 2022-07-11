@@ -2,8 +2,11 @@ const dal = require('../../src/user/user.dal');
 const { expect } = require('chai');
 const { faker } = require('@faker-js/faker');
 const testData = require('../testData');
+const { seedDatabase } = require('../testData');
 
 describe('User data access layer tests', function() {
+    beforeEach(() => seedDatabase())
+
     it('Create user with username and password, and fetchByID', function() {
         const username = faker.internet.userName();
         const password = faker.internet.password();

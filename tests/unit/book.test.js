@@ -5,7 +5,7 @@ const { faker } = require('@faker-js/faker');
 const { createStubs, stubBook, paths } = require('./book.stubs');
 const testData = require('../testData');
 
-describe.only('Testing book module', function() {
+describe('Testing book module', function() {
     it('Create(): call book DAL with book data provided', function() {
         const spy = sinon.fake.resolves(true);
 

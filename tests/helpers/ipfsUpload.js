@@ -1,12 +1,6 @@
-// const { create } = require('ipfs-http-client');
-const { faker } = require('@faker-js/faker');
-const axios = require('axios');
 
 async function loadIpfs() {
     const { create } = await import('ipfs-http-client');
-    // const { create } = import('ipfs-http-client');
-
-    // return import('ipfs-http-client');
     return create();
 }
 
@@ -41,10 +35,8 @@ function batch(content, path) {
             return client.addAll(content)
         })
         .then(async generator => {
-            // console.log('async geenrator:', generator);
             const files = [];
             for await (const res of generator) {
-                // console.log('res:', res);
                 const cidv1 = res.cid.toV1().toString();
 
                 let gatewayUrl = 'localhost:8080';

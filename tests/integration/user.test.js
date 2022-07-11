@@ -2,9 +2,22 @@ const { expect }  =require('chai');
 const { faker } = require('@faker-js/faker');
 const testData = require('../testData');
 const { ClientError, UnauthorizedError } = require('../../src/errors');
-const { user: userModule } = require('../../src/user');
+const proxyquire = require('proxyquire');
+const sinon = require('sinon');
+// const { user: userModule } = require('../../src/user');
 
 describe('User module: integration tests - Fetch', function() {
+    let userModule;
+
+    beforeEach(() => {
+        userModule = proxyquire('../../src/user/user', {
+            '../sessionManager': { get: sinon.fake.returns({
+                userID: testData.users[4].id }), }
+        });
+
+        return testData.seedDatabase()
+    });
+
     it('Fetch with user id', function() {
         const user = testData.users[4];
         const userID = user.id;

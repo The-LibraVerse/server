@@ -47,6 +47,14 @@ router.get('/book/:id', function(req, res, next) {
         .catch(e => next(e));
 });
 
+/** Add book to library
+ */
+router.get('/book/:id/add-to-library', function(req, res, next) {
+    return book.addToLibrary(req.params.id, req)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
 /** Create chapter
  */
 router.post('/book/:id/chapter', function(req, res, next) {

@@ -28,6 +28,10 @@ module.exports = function(results={}) {
                 password: faker.internet.password()
             }),
         },
+        libraryDal: {
+            addToLibrary: sinon.fake.resolves(true),
+            fetch: sinon.fake.resolves([]),
+        },
         bookDal: {
             create: sinon.fake.resolves({id: 3}),
             fetchAuthorID: sinon.fake.resolves(faker.datatype.number()),

@@ -25,14 +25,14 @@ describe('Chapter data access layer', function() {
         const bookID = 2;
         return dal.fetchAll(bookID)
             .then(res => {
-                expect(res).to.have.lengthOf.at.least(8);
+                expect(res).to.have.lengthOf.at.least(3);
             });
     });
 
     it('Count should take book id and return all chapters with that book id', function() {
         const bookID = 2;
         return dal.fetchCount(bookID)
-        .then(res => expect(res).to.be.at.least(8));
+        .then(res => expect(res).to.be.at.least(3));
     });
 
 

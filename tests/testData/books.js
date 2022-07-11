@@ -18,4 +18,19 @@ for (let i=0; i<30; i++) {
     });
 }
 
+const library = [];
+
+for (let i = 0; i<50; i++) {
+    const userIndex = (i < 5) ? 0 :  Math.floor(Math.random() * users.length);
+    const userID = users[userIndex].id;
+
+    const bookIndex = (i < 5) ? 0 :  Math.floor(Math.random() * books.length);
+    const bookID = books[bookIndex].id;
+
+    library.push({
+        userID,
+        bookID,
+    })
+}
+
 module.exports = books;

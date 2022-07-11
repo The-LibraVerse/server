@@ -4,9 +4,9 @@ const ipfsUpload = require('../helpers/ipfsUpload');
 
 const chapters = [];
 
-for (let i = 0; i<10; i++) {
+for (let i = 0; i<7; i++) {
     const id = i + 1;
-    const bookID = (i < 8) ? 2 : Math.ceil(Math.random() * books.length);
+    const bookID = (i < 3) ? 2 : Math.ceil(Math.random() * books.length);
     // const bookID = (i % 2 == 0) ? 2 : Math.ceil(Math.random() * books.length);
     const _content = faker.lorem.paragraphs(20);
 
@@ -16,6 +16,7 @@ for (let i = 0; i<10; i++) {
 
     chapters.push({
         _content,
+        cover,
         id,
         bookID,
         title,

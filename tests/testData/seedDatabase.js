@@ -1,5 +1,6 @@
 const users = require('./users');
 const books = require('./books');
+const libraries = require('./libraries');
 // const { chapters } = require('./chapters');
 const { uploadChaptersToIPFS } = require('./chapters');
 const db = require('../../config/database')();
@@ -8,6 +9,7 @@ let chapters;
 
 function main() {
     let promiseChain = db.query(`DELETE FROM chapters`)
+        .then(() => db.query(`DELETE FROM library`))
         .then(() => db.query(`DELETE FROM books`))
         .then(() => db.query(`DELETE FROM users`))
 
@@ -29,6 +31,18 @@ function main() {
 
         promiseChain = promiseChain.then(() => db.query(query, values))
             .then(db.query(`SELECT setval('"books__id_seq"', 50);`))
+    });
+
+    libraries.forEach(library => {
+        const query = `INSERT INTO library(user_id, book_id, date_added) VALUES ($1, $2, $3)`;
+        const values = [
+            library.userID, library.bookID, library.date_added,
+        ];
+
+        promiseChain = promiseChain.then(() => db.query(query, values))
+            .then(db.query(`SELECT setval('"library__id_seq"', 100);`))
+            .catch(e => e);
+            // .catch(e => console.log(e));
     });
 
     promiseChain = promiseChain

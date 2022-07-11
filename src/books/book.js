@@ -1,5 +1,6 @@
 const externalFetch = require('../externalFetch');
 const bookDal = require('./book.dal');
+const libraryDal = require('../books/library.dal');
 const { userDal } = require('../user');
 const chapterDAL = require('./chapter.dal');
 const sessionManager = require('../sessionManager');
@@ -67,6 +68,27 @@ function fetchAuthors(books) {
         });
 }
 
+function getUserID(param, rejectUnauthorized=false) {
+    let userID;
+
+    if(typeof param == 'number' ||
+        (typeof param == 'string' && !isNaN(param)))
+        userID = param;
+
+    else {
+        const session = sessionManager.get(param)
+        if(!session && rejectUnauthorized)
+            return Promise.reject(new UnauthorizedError('You are not logged in.'));
+
+        userID = session.userID;
+    }
+
+    if(!userID)
+        return Promise.reject("Invalid search: " + param + ". Please specify a user ");
+    else return userID
+
+}
+
 function createdBy(param) {
     let userID;
 
@@ -93,7 +115,6 @@ function createdBy(param) {
 
 module.exports = {
     create(data, reqObj) {
-        // console.log('req ojf:', reqObj);
         let author;
 
         const session = sessionManager.get(reqObj);
@@ -112,7 +133,14 @@ module.exports = {
      * data.content should be an ipfs url or hash
      */
     addChapter(bookID, data, sessionObj) {
-        let metadata = data.metadata;
+        const metadata = (data.metadata && typeof data.metadata == 'object') ?
+            data.metadata : {};
+
+        if(data.cover)
+            metadata.cover = data.cover;
+        if(data.title)
+            metadata.title = data.title;
+
         const content = data.content;
 
         if(!content)
@@ -124,14 +152,14 @@ module.exports = {
             return Promise.reject(new UnauthorizedError('You are not logged in.'));
 
         return (() => {
-            if(!metadata)
-                metadata = {}
             if(!metadata.title) {
                 return chapterDAL.fetchCountForBook(bookID)
                     .then(count => {
                         metadata.title = 'Chapter ' + (count + 1);
                     });
-            } else return Promise.resolve();
+            }
+
+            return Promise.resolve();
         })()
             .then(() => bookDal.fetchAuthorID(bookID))
             .then(res => {
@@ -153,6 +181,9 @@ module.exports = {
             })
             .then(res => {
                 chapter.content = res;
+                chapter.book = {
+                    id: bookID
+                }
 
                 delete chapter.contentURL;
                 return chapter;
@@ -205,13 +236,41 @@ module.exports = {
             })
     },
 
+    addToLibrary(bookID, sessionObj) {
+        const userID = getUserID(sessionObj, true);
+
+        return libraryDal.addToLibrary(userID, bookID)
+        .then(res => {
+            return res;
+        });
+    },
+
     userBooks(param) {
-        const library = {}
+        const myBooks = {}
+
         return createdBy(param)
             .then(res => {
-                library.creations = res;
+                myBooks.creations = res;
 
-                return library;
+                const userID = getUserID(param);
+                return libraryDal.fetch(userID)
+            })
+            .then(res => {
+                myBooks.library = res.map(e => {
+                    const { bookTitle: title, bookID:id, bookCover: cover, bookAuthor: author } = e;
+
+                    return {
+                        title,
+                        id,
+                        cover,
+                        author
+                    }
+                })
+                return fetchAuthors(myBooks.library);
+            }).then(res => {
+
+                myBooks.library = res;
+                return myBooks;
             });
     },
 

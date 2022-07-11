@@ -21,8 +21,8 @@ function normaliseResult(data) {
 
 module.exports = {
     create(data) {
-        const query = `INSERT INTO ${table} (title, author) VALUES($1, $2) RETURNING *`;
-        const values = [data.title, data.author];
+        const query = `INSERT INTO ${table} (title, author, cover) VALUES($1, $2, $3) RETURNING *`;
+        const values = [data.title, data.author, data.cover];
 
         return db.query(query, values)
             .then(res => {
