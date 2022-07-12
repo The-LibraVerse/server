@@ -2,22 +2,31 @@ const { faker } = require('@faker-js/faker');
 const books = require('./books');
 const ipfsUpload = require('../helpers/ipfsUpload');
 
-const chapters = [];
+const chapters = require('./chapterContent/chapters.json');
 
-for (let i = 0; i<7; i++) {
+const modChapters = chapters.map((c, i) => {
     const id = i + 1;
-    const bookID = (i < 3) ? 2 : Math.ceil(Math.random() * books.length);
+    const bookID = (i < 3) ? 2 :
+        id % 10 == 0 ? 7 :
+        id % 11 == 0 ? 14:
+        Math.ceil(Math.random() * books.length);
     // const bookID = (i % 2 == 0) ? 2 : Math.ceil(Math.random() * books.length);
-    const _content = faker.lorem.paragraphs(20);
 
-    const contentURL = faker.internet.url();
+    const published = (i < 3) ? false :
+        (i == 4) ? true :
+        (bookID == 7 || bookID == 14) ? true : faker.datatype.boolean();
+
+    const _content = c.content;
+    const contentURL = c.contentURL;
+    const metadataHash = published ? c.ipfsHash : null;
+    const metadataURI = metadataHash ? 'http://' + metadataHash + '.ipfs.localhost:8080' : null;
+
     const cover = faker.image.image();
     const title = faker.word.interjection();
-    const forSale = faker.datatype.boolean();
-    const published = (i < 3) ? false : faker.datatype.boolean();
-    const metadataURI = faker.internet.url();
+    const forSale = (!published) ? false :
+        (bookID == 7) ? true : faker.datatype.boolean();
 
-    chapters.push({
+    return{
         _content,
         cover,
         id,
@@ -26,22 +35,9 @@ for (let i = 0; i<7; i++) {
         contentURL,
         forSale,
         published,
+        metadataHash,
         metadataURI,
-    });
+    }
+});
 
-}
-
-function uploadChaptersToIPFS() {
-    const content = chapters.map(c => c._content);
-
-    return ipfsUpload.batch(content)
-        .then(res => {
-            chapters.forEach((c, i) => {
-                chapters[i].contentURL = res[i].url;
-            });
-
-            return chapters;
-        });
-}
-
-module.exports = { chapters: Object.freeze(chapters), uploadChaptersToIPFS };
+module.exports = { chapters: Object.freeze(modChapters) };

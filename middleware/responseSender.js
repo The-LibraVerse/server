@@ -4,17 +4,20 @@ module.exports = function(req, res, next) {
     res.send = function(data) {
         res.send = oldSend;
 
-        if(data.clearSiteData) {
-            let headerVal = data.clearSiteData;
+        if(data) {
+            if(data.clearSiteData) {
+                let headerVal = data.clearSiteData;
 
-            if(data.clearSiteData === true)
-                headerVal = '';
+                if(data.clearSiteData === true)
+                    headerVal = '';
 
-            res.set('Clear-Site-Data', headerVal);
-            delete data.clearSiteData;
-        } else if(data.clearCookies) {
-            res.set('Clear-Site-Data', '"cookies"');
-            delete data.clearCookies;
+                res.set('Clear-Site-Data', headerVal);
+
+                delete data.clearSiteData;
+            } else if(data.clearCookies) {
+                res.set('Clear-Site-Data', '"cookies"');
+                delete data.clearCookies;
+            }
         }
 
         return res.send(data);

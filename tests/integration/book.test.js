@@ -5,18 +5,21 @@ const sinon = require('sinon');
 const proxyquire = require('proxyquire');
 const fetch = require('../helpers/fetch');
 
-describe.only('Book module: integration tests', function() {
+describe('Book module: integration tests', function() {
     let bookModule;
     const userID = 1;
 
+    /*
     before(() => {
-        // return testData.seedDatabase()
+        return testData.seedDatabase()
     });
+    */
 
     beforeEach(() => {
         bookModule = proxyquire('../../src/books/book', {
             '../sessionManager': { get: sinon.fake.returns({ userID }), }
         });
+        return testData.seedDatabase()
     });
 
     it('Create', function() {
@@ -108,9 +111,9 @@ describe.only('Book module: integration tests', function() {
             };
 
         return bookModule.listForSale(bookID, data, faker.datatype.json())
+            .then(res => bookModule.fetchBook(bookID))
             .then(res => {
-                expect(res).to.have.property('metadataURI')
-                    .that.is.a('string');
+                expect(res).to.have.property('forSale', true);
             });
     });
 
@@ -122,33 +125,41 @@ describe.only('Book module: integration tests', function() {
             };
 
         return bookModule.listChapterForSale(chapterID, data, faker.datatype.json())
+            .then(res => bookModule.fetchChapter(bookID, chapterID))
             .then(res => {
-                expect(res).to.have.property('metadataURI')
-                    .that.is.a('string');
+                expect(res).to.have.property('forSale', true);
             });
     });
 
-    it('Fetch chapter: user is author', function() {
-        const chapter = testData.chapters[2];
+    it.only('Fetch chapter: should return book details', function() {
+        const chapter = testData.chapters[2],
+            book = testData.books[chapter.bookID],
+            author = testData.users[book.author];
 
         return bookModule.fetchChapter(chapter.bookID, chapter.id)
             .then(res => {
                 expect(res).to.not.be.undefined;
                 expect(res).to.have.keys('id', 'cover', 'title', 'content',
-                    'book',
+                    'book', 'contentURL',
                     'published', 'forSale', 'metadataURI', 'metadataHash',
                 );
+                expect(res.book, 'book details').to.have.property('title')
+                    .that.has.property('id', author.id);
+                expect(res.book).to.have.property('author')
+                    .that.has.property('id', author.id);
                 expect(res).to.have.property('content', chapter._content);
             });
     });
 
     it('Fetch should return book book data', function() {
-        const book = testData.books[1], bookID = book.id;
+        const book = testData.books[13], bookID = book.id;
+        const chapters = testData.chapters.filter(c => c.bookID == bookID);
+        const totalChapters = chapters.length;
 
         return bookModule.fetchBook(bookID)
             .then(res => {
                 expect(res).to.have.keys('id', 'cover', 'title', 'author',
-                    'published', 'forSale', 'metadataURI', 'metadataHash', 'totalChapters', 'chapters');
+                    'published', 'forSale', 'metadataURI', 'totalChapters', 'chapters');
 
                 expect(res).to.have.property('id', book.id);
                 expect(res).to.have.property('title', book.title);
@@ -156,12 +167,20 @@ describe.only('Book module: integration tests', function() {
                 expect(res).to.have.property('published', book.published);
                 expect(res).to.have.property('forSale', book.forSale);
                 expect(res).to.have.property('metadataURI', book.metadataURI);
+                expect(res.chapters).to.not.be.empty;
+                expect(res.chapters).to.have.lengthOf(totalChapters);
+                expect(res).to.have.property('totalChapters', totalChapters);
+                res.chapters.forEach((c, i) => {
+                    expect(c).to.have.keys('id', 'title', 'cover', 'forSale', 'published', 'metadataURI', 'metadataHash');
+                    expect(c).to.have.property('id', chapters[i].id);
+                    expect(c).to.have.property('title', 'Chapter ' + (chapters[i].id - 70))
+                    expect(c).to.have.property('cover', chapters[i].cover);
+                });
             });
     });
 
     it('FetchAll should return book covers', function() {
-        return testData.seedDatabase()
-            .then(() => bookModule.fetchAll())
+        return bookModule.fetchAll()
             .then(res => {
                 expect(res).to.not.be.empty;
                 res.forEach((b, i) => {
@@ -200,8 +219,7 @@ describe.only('Book module: integration tests', function() {
 
         const library = testData.libraries.slice(0, 5);
 
-        return testData.seedDatabase()
-            .then(() => bookModule.userBooks(userID))
+        return bookModule.userBooks(userID)
             .then(res => {
                 expect(res).to.have.property('library')
                     .that.has.lengthOf(library.length);

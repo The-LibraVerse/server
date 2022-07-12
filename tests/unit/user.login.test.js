@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const { faker } = require('@faker-js/faker');
 const { createStubs, stubUserModule, paths } = require('./user.stubs');
 
-describe.only('User module unit tests: Login', function() {
+describe('User module unit tests: Login', function() {
     it('Login: call userDAL.fetchByUsername if data = {address, password}', function() {
         const data = {
             username: faker.internet.userName(),
@@ -59,7 +59,7 @@ describe.only('User module unit tests: Login', function() {
             .to.be.rejectedWith(ClientError);
     });
 
-    it('Logout: should destroy session', function() {
+    it('Logout: should call session.destroy', function() {
         const stubs = createStubs();
         const spy = stubs[paths.sessionManager].destroy;
         const reqObj = JSON.parse(faker.datatype.json());
@@ -69,15 +69,6 @@ describe.only('User module unit tests: Login', function() {
         return userModule.logout(reqObj)
         .then(() => {
             sinon.assert.calledWith(spy, reqObj);
-        });
-    });
-
-    it('Logout: should return command "clear-headers"', function() {
-        const userModule = stubUserModule()
-
-        return userModule.logout(faker.datatype.json())
-        .then(res => {
-            expect(res).to.have.property('clearHeaders', true);
         });
     });
 });

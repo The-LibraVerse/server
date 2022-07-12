@@ -5,6 +5,7 @@ const { faker } = require('@faker-js/faker');
 describe('Chapter data access layer', function() {
     it('Create and FetchByID', function() {
         const title = faker.lorem.words();
+        console.log('title:', title);
         const bookID = 2;
         const content = 'http://bafybeiegytsywwuncpryi4gd46rwsrenopqddkfi23q2igxzwj7k4zlzam.ipfs.localhost:8080/';
         const cover = faker.image.image();
@@ -12,7 +13,7 @@ describe('Chapter data access layer', function() {
         return dal.create(bookID, content, {title, cover})
             .then(res => {
                 expect(res).to.have.property('id').that.is.a('number');
-                return dal.fetchByID(bookID, res.id)
+                return dal.fetchByID(res.id)
             }).then(res => {
                 expect(res).to.have.property('title', title);
                 expect(res).to.have.property('cover', cover);

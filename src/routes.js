@@ -101,8 +101,8 @@ router.post('/book/:id/sell', function(req, res, next) {
         .catch(e => next(e));
 });
 
-router.post('/book/:bookID/chapter/:chapterID/sell', function(req, res, next) {
-    return book.listChapterForSale(req.params.chapterID, req.body, req)
+router.post('/book/:book_id/chapter/:id/sell', function(req, res, next) {
+    return book.listChapterForSale(req.params.id, req.body, req)
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });

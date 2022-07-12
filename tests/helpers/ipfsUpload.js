@@ -37,13 +37,14 @@ function batch(content, path) {
         .then(async generator => {
             const files = [];
             for await (const res of generator) {
+                const cidv0 = res.cid.toV0().toString();
                 const cidv1 = res.cid.toV1().toString();
 
                 let gatewayUrl = 'localhost:8080';
 
                 let fileUrl = 'http://' + cidv1 + '.ipfs.' + gatewayUrl
 
-                files.push({cidv1, url: fileUrl});
+                files.push({cidv0, cidv1, url: fileUrl});
             }
 
             return files;

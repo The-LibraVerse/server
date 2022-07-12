@@ -3,7 +3,10 @@ const users = require('./users');
 const books = [];
 
 for (let i=0; i<30; i++) {
-    const userIndex = (i < 5) ? 0 :  Math.floor(Math.random() * users.length);
+    const userIndex = (i < 5) ? 0 : 
+        ((i + 1) % 7 == 0) ? 6 :
+        Math.floor(Math.random() * users.length);
+
     const author = users[userIndex].id;
 
     const id = i+1;
@@ -11,11 +14,11 @@ for (let i=0; i<30; i++) {
     const cover = faker.image.image();
 
     const published = (i % 5 == 2) ? false :
-        (i == 3) ? true : faker.datatype.boolean()
+        (i == 3 || id == 14) ? true : faker.datatype.boolean();
 
     const forSale = !published ? false : faker.datatype.boolean();
-    const metadataURI = !published ? null : faker.internet.url();
     const metadataHash = !published ? null : 'bafybe' + faker.random.alphaNumeric(53);
+    const metadataURI = metadataHash ? 'http://' + metadataHash + '.ipfs.localhost:8080' : null;
 
     books.push({
         id,

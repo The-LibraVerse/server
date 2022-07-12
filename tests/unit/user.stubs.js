@@ -12,8 +12,8 @@ const paths = {
 
 const userPath = '../../src/user/user';
 
-function createStubs() {
-    const allStubs = masterStubs();
+function createStubs(stubsInit) {
+    const allStubs = masterStubs(stubsInit);
 
     return {
         [paths.sessionManager]: allStubs.sessionManager,

@@ -7,6 +7,7 @@ const columnAliases = {
     published: 'published',
     metadataHash: 'metadata_hash',
     metadataURI: 'metadata_uri',
+    forSale: 'for_sale',
 }
 
 function normaliseResult(data) {

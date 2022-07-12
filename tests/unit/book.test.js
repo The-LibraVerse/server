@@ -5,34 +5,16 @@ const { faker } = require('@faker-js/faker');
 const { createStubs, stubBook, paths } = require('./book.stubs');
 const testData = require('../testData');
 
-describe('Testing book module', function() {
-    it('Create(): call book DAL with book data provided', function() {
-        const spy = sinon.fake.resolves(true);
-
-        const stubs = createStubs();
-        stubs[paths.bookDal].create = spy;
-        stubs[paths.session].get = sinon.fake.returns({ userID: 42 });
-
-        const book = stubBook(stubs)
-        const data = {
-            name: faker.commerce.productName()
-        }
-
-        return book.create(data, faker.datatype.json())
-            .then(() => {
-                sinon.assert.calledWith(spy, sinon.match(data));
-            });
-    });
-
+describe.only('Testing book module', function() {
     it('Create(): Check session manager for author id', function() {
         const userID = faker.datatype.number();
         const spy = sinon.fake.resolves(true);
-        const sessionManagerSpy = sinon.fake.returns({ userID });
         const reqObj = faker.datatype.json();
 
-        const stubs = createStubs();
+        const stubs = createStubs({getSession: userID});
         stubs[paths.bookDal].create = spy;
-        stubs[paths.session].get = sessionManagerSpy;
+
+        const sessionManagerSpy = stubs[paths.session].get;
 
         const book = stubBook(stubs)
         const data = { name: faker.commerce.productName() }
@@ -42,6 +24,19 @@ describe('Testing book module', function() {
                 sinon.assert.calledWith(spy, sinon.match.has('author', userID));
                 sinon.assert.calledWith(sessionManagerSpy, reqObj);
             });
+    });
+
+    it('Book.Create should throw if user is not logged in', function() {
+        const stubs = createStubs({session:false});
+        // stubs[paths.session].get = sinon.fake.returns(false);
+
+        const book = stubBook(stubs)
+        const data = { name: faker.commerce.productName() }
+
+        return expect(
+            book.create(data, faker.datatype.json())
+        ).to.be.rejectedWith(UnauthorizedError);
+
     });
 
     it('AddChapter(): throw if user is not author of book', function() {
@@ -54,10 +49,7 @@ describe('Testing book module', function() {
 
         stubs[paths.session].get = sinon.fake.returns({userID: faker.datatype.number()});
 
-        const metadata = {
-            title: faker.lorem.words(),
-            cover: faker.image.image()
-        }
+        const metadata = {title:faker.lorem.words(), cover:faker.image.image()}
 
         const content = faker.lorem.paragraphs();
 
@@ -77,10 +69,7 @@ describe('Testing book module', function() {
 
         stubs[paths.session].get = sinon.fake.returns(false);
 
-        const metadata = {
-            title: faker.lorem.words(),
-            cover: faker.image.image()
-        }
+        const metadata = {title:faker.lorem.words(), cover:faker.image.image()}
 
         const content = faker.lorem.paragraphs();
 
@@ -90,29 +79,23 @@ describe('Testing book module', function() {
             .to.be.rejectedWith(UnauthorizedError);
     });
 
-    it('AddChapter(): call chapter dal with create()', function() {
-        const reqObj = faker.datatype.json();
+    it('AddChapter(): Dont call chapterDAL.create if user is not author of book', function() {
         const dalSpy = sinon.fake.resolves(true);
-        const bookID = faker.datatype.number();
-        const userID = faker.datatype.number();
 
         const stubs = createStubs()
-        stubs[paths.bookDal].fetchAuthorID = sinon.fake.resolves(userID);
         stubs[paths.chapterDal].create = dalSpy;
-        stubs[paths.session].get = sinon.fake.returns({userID});
+        stubs[paths.session].get = sinon.fake.returns(false);
 
-        const metadata = {
-            title: faker.lorem.words(),
-            cover: faker.image.image()
-        }
-
+        const metadata = {title:faker.lorem.words(), cover:faker.image.image()}
         const content = faker.lorem.paragraphs();
 
         const bookModule = stubBook(stubs);
 
-        return bookModule.addChapter(bookID, {metadata, content}, reqObj)
+        return expect(
+            bookModule.addChapter(faker.datatype.number(), {metadata,content}, faker.datatype.json()))
+            .to.be.rejectedWith(UnauthorizedError)
             .then(() => {
-                sinon.assert.calledWith(dalSpy, bookID, content, metadata);
+                sinon.assert.notCalled(dalSpy);
             });
     });
 
@@ -153,46 +136,40 @@ describe('Testing book module', function() {
             .to.be.rejectedWith(ClientError);
     });
 
-    it('FetchChapter(): Return chapter details', function() {
+    it('FetchChapter(): Do not return content url and metadata url if browser is not book author', function() {
         const chapter = testData.chapters[4];
-        const chapterID = chapter.id;
-        const bookID = faker.datatype.number();
+        const book = testData.books[chapter.bookID];
 
-        const spy = sinon.fake.resolves(chapter);
+        const stubs = createStubs({getSession: faker.datatype.number()})
+        stubs[paths.chapterDal].fetchByID = sinon.fake.resolves(chapter);
+        stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
 
-        const stubs = createStubs()
-        stubs[paths.chapterDal].fetchByID = spy;
+        const bookModule = stubBook(stubs);
 
-        const book = stubBook(stubs);
-
-        return book.fetchChapter(bookID, chapterID)
+        return bookModule.fetchChapter(book.id, chapter.id)
             .then(res => {
-                sinon.assert.calledWith(spy, bookID, chapterID);
-                expect(res).to.have.property('id', chapter.id);
-                expect(res).to.have.property('title', chapter.title);
-                expect(res).to.have.property('cover', chapter.cover);
-                expect(res).to.have.keys('id', 'title', 'content', 'cover');
+                expect(res).to.not.have.property('contentURL');
+                expect(res).to.not.have.property('metadataURI');
+                expect(res).to.not.have.property('metadataURL');
             });
     });
 
-    it('FetchChapter(): Return content url for chapter if browser is author', function() {
-        const author = faker.datatype.number();
+    it('FetchChapter(): Return content url and metadata url if browser is book author', function() {
         const chapter = testData.chapters[4];
-        const chapterID = chapter.id;
-        const bookID = chapter.book;
+        const book = testData.books[chapter.bookID];
+        const author = testData.users.filter(u => u.id == book.author)[0];
 
-        const spy = sinon.fake.resolves(chapter);
+        const stubs = createStubs({getSession: author.id})
+        stubs[paths.chapterDal].fetchByID = sinon.fake.resolves(chapter);
+        stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
 
-        const stubs = createStubs({getSession: author})
-        stubs[paths.chapterDal].fetchByID = spy;
+        const bookModule = stubBook(stubs);
 
-        const book = stubBook(stubs);
-
-        return book.fetchChapter(bookID, chapterID)
+        return bookModule.fetchChapter(book.id, chapter.id)
             .then(res => {
-                sinon.assert.calledWith(spy, bookID, chapterID);
                 expect(res).to.have.property('contentURL', chapter.contentURL);
-                expect(res).to.have.keys('id', 'title', 'content', 'cover', 'contentURL');
+                expect(res).to.have.property('metadataURI', chapter.metadataURI);
+                expect(res).to.have.property('metadataURL', chapter.metadataURI);
             });
     });
 
@@ -228,29 +205,6 @@ describe('Testing book module', function() {
         return book.deleteChapter(bookID, chapterID)
             .then(() => {
                 sinon.assert.calledWith(dalSpy, bookID, chapterID);
-            });
-    });
-
-    it('FetchAll should call dal.fetchAll', function() {
-        const stubs = createStubs();
-        const dalSpy = stubs[paths.bookDal].fetchAll;
-        const book = stubBook(stubs);
-
-        return book.fetchAll()
-            .then(() => {
-                sinon.assert.called(dalSpy);
-            });
-    });
-
-    it('UserBooks(number): call dal.fetchByCreator(number)', function() {
-        const userID = faker.datatype.number();
-        const stubs = createStubs();
-        const dalSpy = stubs[paths.bookDal].fetchByCreator;
-        const book = stubBook(stubs);
-
-        return book.userBooks(userID)
-            .then(() => {
-                sinon.assert.calledWith(dalSpy, userID);
             });
     });
 
@@ -304,24 +258,6 @@ describe('Testing book module', function() {
             });
     });
 
-    it('FetchBook: return book data from dal', function() {
-        const author = 5;
-        const bookID = 42
-        const book = {
-            id: faker.datatype.number(100),
-            name: faker.commerce.productName(), author 
-        };
-
-        const stubs = createStubs();
-        stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
-        const bookModule = stubBook(stubs);
-
-        return bookModule.fetchBook(bookID)
-        .then(res => {
-            expect(res).to.include.keys('title', 'author', 'id');
-        });
-    });
-
     it('FetchBook: if book has no chapters, return 0', function() {
         const bookID = 42
         const book = {
@@ -341,67 +277,16 @@ describe('Testing book module', function() {
         });
     });
 
-    it('FetchBook: should return chapters[] ids, cover and titles', function() {
-        const author = 5;
-        const bookID = 42
-        const book = {
-            id: faker.datatype.number(100),
-            name: faker.commerce.productName(), author 
-        };
-
-        const chapters = faker.datatype.array().map((_a, index) => {
-            return {
-                id: index+71,
-                title: 'Chapter ' + (index + 1),
-                contentURL: faker.internet.url(),
-                cover: faker.image.image(),
-                bookID,
-            }
-        });
-
-        const stubs = createStubs();
-        stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
-
-        const countSpy = sinon.fake.resolves(chapters);
-        stubs[paths.chapterDal].fetchAll = countSpy;
-        const bookModule = stubBook(stubs);
-
-        return bookModule.fetchBook(bookID)
-            .then(res => {
-                sinon.assert.calledWith(countSpy, bookID);
-
-                expect(res).to.have.property('chapters').that.has.lengthOf(chapters.length);
-                res.chapters.forEach((c, i) => {
-                    expect(c).to.have.keys('id', 'title', 'cover');
-                    expect(c).to.have.property('id', chapters[i].id);
-                    expect(c).to.have.property('title', 'Chapter ' + (chapters[i].id - 70))
-                    expect(c).to.have.property('cover', chapters[i].cover);
-                });
-            });
-    });
-
     it('FetchBook: should return chapters[] content urls if book author is browsing', function() {
-        const author = 5;
+        const author = 1;
         const bookID = 42
-        const book = {
-            id: faker.datatype.number(100),
-            name: faker.commerce.productName(), author 
-        };
+        const book = {...testData.books[7], author };
 
-        const chapters = faker.datatype.array().map((_a, index) => {
-            return {
-                id: index+71,
-                title: 'Chapter ' + (index + 1),
-                contentURL: faker.internet.url(),
-                cover: faker.image.image(),
-                bookID,
-            }
-        });
+        const chapters = testData.chapters.slice(1,5);
 
-        const stubs = createStubs();
+        const stubs = createStubs({getSession: author})
         stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
         stubs[paths.chapterDal].fetchAll = sinon.fake.resolves(chapters);
-        stubs[paths.session].get = sinon.fake.returns({userID: author});
 
         const bookModule = stubBook(stubs);
 
@@ -409,33 +294,31 @@ describe('Testing book module', function() {
             .then(res => {
                 expect(res).to.have.property('chapters').that.has.lengthOf(chapters.length);
                 res.chapters.forEach((c, i) => {
-                    expect(c).to.have.keys('id', 'title', 'cover', 'contentURL');
                     expect(c).to.have.property('contentURL', chapters[i].contentURL);
                 });
             });
     });
 
-    it('FetchBook: should have chapter count', function() {
-        const author = 5;
-        const totalChapters = faker.datatype.number(20);
+    it('FetchBook: do not  return chapters[] content urls if user is not book author', function() {
+        const author = 1;
         const bookID = 42
-        const book = {
-            id: faker.datatype.number(100),
-            name: faker.commerce.productName(), author 
-        };
+        const book = {...testData.books[7], author };
 
-        const stubs = createStubs();
+        const chapters = testData.chapters.slice(1,5);
+
+        const stubs = createStubs({getSession: faker.random.numeric(2)})
         stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
-        const countSpy = sinon.fake.resolves(totalChapters);
-        stubs[paths.chapterDal].fetchCountForBook = countSpy;
-        stubs[paths.chapterDal].fetchCount = countSpy;
+        stubs[paths.chapterDal].fetchAll = sinon.fake.resolves(chapters);
+
         const bookModule = stubBook(stubs);
 
         return bookModule.fetchBook(bookID)
-        .then(res => {
-            expect(res).to.have.property('totalChapters', totalChapters);
-            sinon.assert.calledWith(countSpy, bookID);
-        });
+            .then(res => {
+                expect(res).to.have.property('chapters').that.has.lengthOf(chapters.length);
+                res.chapters.forEach((c, i) => {
+                    expect(c).to.not.have.property('contentURL');
+                });
+            });
     });
 
     [
@@ -507,18 +390,5 @@ describe('Testing book module', function() {
                     });
                 });
         });
-    });
-
-    it('CreatedBy should call dal.createdBy', function() {
-        const userID = faker.datatype.number();
-        const stubs = createStubs();
-        const spy = stubs[paths.bookDal].fetchByCreator;
-        stubs[paths.session].get = sinon.fake.returns({userID});
-        const book = stubBook(stubs);
-
-        return book.createdBy(faker.datatype.json())
-            .then(() => {
-                sinon.assert.calledWith(spy, userID);
-            });
     });
 });

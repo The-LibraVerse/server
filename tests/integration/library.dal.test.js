@@ -24,7 +24,7 @@ describe('Library data access layer', function() {
                     expect(entry).to.have.property('bookTitle', library[i].bookTitle);
                     expect(entry).to.have.property('bookCover', library[i].bookCover);
                     expect(entry).to.have.property('bookAuthor', library[i].bookAuthor);
-                    expect(entry).to.have.keys('userID', 'bookID', 'bookTitle', 'bookCover', 'bookAuthor');
+                    expect(entry).to.have.keys('userID', 'bookID', 'bookTitle', 'bookCover', 'bookAuthor', 'dateAdded', 'forSale');
                 });
             });
     });

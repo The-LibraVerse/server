@@ -18,8 +18,8 @@ const paths = {
 
 const bookPath = '../../src/books/book';
 
-function createStubs() {
-    const allStubs = masterStubs();
+function createStubs(stubsInit) {
+    const allStubs = masterStubs(stubsInit);
     return {
         [paths.session]: allStubs.sessionManager,
         [paths.userDal]: {

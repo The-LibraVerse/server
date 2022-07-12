@@ -169,6 +169,21 @@ module.exports = {
                 return chapterDAL.update(chapterID, {metadataHash: res.cidv1, published: true})
             });
     },
+
+    listForSale(bookID, reqObj) {
+        const data = {forSale: true}
+        return bookDal.update(bookID, data)
+        .then(res => {
+        });
+    },
+
+    listChapterForSale(chapterID, reqObj) {
+        const data = {forSale: true}
+        return chapterDAL.update(chapterID, data)
+        .then(res => {
+        });
+    },
+
     /**
      * data.content should be an ipfs url or hash
      */
@@ -213,11 +228,14 @@ module.exports = {
     fetchChapter(bookID, chapterID, reqObj) {
         const session = sessionManager.get(reqObj);
 
-        let chapter = {};
+        let chapter = {}, book = {author: {}};
         return chapterDAL.fetchByID(chapterID)
         // return chapterDAL.fetchByID(bookID, chapterID)
             .then(res => {
                 chapter = formatChapter(res);
+                return bookDal.fetchByID(res.bookID)
+            }).then(res => {
+                book = formatBook(res);
                 return externalFetch.fetch(chapter.contentURL)
             })
             .then(res => {
@@ -226,10 +244,18 @@ module.exports = {
                     id: bookID
                 }
 
-                if(chapter.metadataHash)
-                    chapter.metadataURI = ipfsAPI.hashToURL(chapter.metadataHash);
+                if(book.author && session && book.author.id === session.userID) {
+                    if(chapter.metadataHash) {
+                        chapter.metadataURI = ipfsAPI.hashToURL(chapter.metadataHash);
+                        chapter.metadataURL = ipfsAPI.hashToURL(chapter.metadataHash);
+                    }
+                }
+                else {
+                    delete chapter.contentURL;
+                    delete chapter.metadataURI;
+                    delete chapter.metadataHash;
+                }
 
-                delete chapter.contentURL;
                 return chapter;
             });
     },

@@ -5,6 +5,7 @@ const columnAliases = {
     title: 'title',
     cover: 'cover',
     published: 'published',
+    forSale: 'for_sale',
     metadataHash: 'metadata_hash',
     metadataURI: 'metadata_uri',
 }

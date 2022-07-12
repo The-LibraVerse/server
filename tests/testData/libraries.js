@@ -13,16 +13,26 @@ for (let i = 0; i<50; i++) {
 
     const bookIndex = (i < 5) ? i : Math.floor(Math.random() * books.length);
     const book = books[bookIndex];
-    const bookID = books[bookIndex].id;
 
-    libraries.push({
-        userID,
-        bookID,
-        bookTitle: book.title,
-        bookCover: book.cover,
-        bookAuthor: book.author,
-        date_added: faker.date.past(),
-    })
+    const staleBooks = libraries.filter(lib => lib.userID == userID);
+    const bookID = books[bookIndex].id;
+    // console.log('stale books:', staleBooks, 'bookd id:', bookID);
+
+        /*
+    if(staleBooks.map(e => e.bookID).includes(bookID))
+        console.log('book', bookID,  'is stale');
+    else {
+        */
+    if(!staleBooks.map(e => e.bookID).includes(bookID)) {
+        libraries.push({
+            userID,
+            bookID,
+            bookTitle: book.title,
+            bookCover: book.cover,
+            bookAuthor: book.author,
+            date_added: faker.date.past(),
+        })
+    }
 }
 
 
