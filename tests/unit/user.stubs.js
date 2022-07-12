@@ -6,6 +6,7 @@ const masterStubs = require('./stubs');
 const paths = {
     userDal: './user.dal',
     session: '../sessionManager',
+    sessionManager: '../sessionManager',
     libraryDal: '../books/library.dal',
 }
 
@@ -15,7 +16,7 @@ function createStubs() {
     const allStubs = masterStubs();
 
     return {
-        [paths.session]: allStubs.sessionManager,
+        [paths.sessionManager]: allStubs.sessionManager,
         [paths.userDal]: allStubs.userDal,
         [paths.libraryDal]: allStubs.libraryDal,
     }

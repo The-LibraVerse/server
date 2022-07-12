@@ -37,6 +37,9 @@ const sessionConfig = {
     cookie
 }
 
+const responseSender = require('./middleware/responseSender');
+app.use(responseSender);
+
 app.use(session(sessionConfig));
 
 // Routes

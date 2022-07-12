@@ -48,6 +48,10 @@ module.exports = {
             });
     },
 
+    logout(reqObj) {
+        return sessionManager.destroy(reqObj)
+    },
+
     fetch(param) {
         let userID;
 

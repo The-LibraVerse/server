@@ -16,6 +16,7 @@ module.exports = function(results={}) {
         sessionManager: {
             create: sinon.fake.returns(true),
             get: (getSession) ? sinon.fake.returns(getSession) : sinon.fake.returns(false),
+            destroy: sinon.fake.resolves(true),
         },
         userDal: {
             create: sinon.fake.resolves({id: 3}),

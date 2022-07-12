@@ -6,5 +6,17 @@ module.exports = {
         if(req && req.session && req.session.user_id)
             return { userID: req.session.user_id }
         else return false;
+    },
+
+    destroy(req) {
+        return new Promise((resolve, reject) => {
+            req.session.destroy(function(err) {
+                if(err)
+                    reject(err)
+                else 
+                    if(!err)
+                        return resolve({ clearCookies: true });
+            });
+        });
     }
 }

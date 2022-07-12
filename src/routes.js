@@ -21,6 +21,12 @@ router.post('/login', function(req, res, next) {
         .catch(e => next(e));
 });
 
+router.delete('/logout', function(req, res, next) {
+    return user.logout(req)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
 router.get('/user', function(req, res, next) {
     return user.fetch(req)
         .then(payload => res.send(payload))
@@ -96,7 +102,7 @@ router.post('/book/:id/sell', function(req, res, next) {
 });
 
 router.post('/book/:bookID/chapter/:chapterID/sell', function(req, res, next) {
-    return book.listChapterForSale(req.params.bookID, req.params.chapterID, req.body, req)
+    return book.listChapterForSale(req.params.chapterID, req.body, req)
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });

@@ -103,7 +103,7 @@ describe.only('Book module: integration tests', function() {
     it('List book for sale', function() {
         const bookID = 2,
             data = {
-                contract: faker.finance.ethereumAddress(),
+                tokenContract: faker.finance.ethereumAddress(),
                 tokenID: faker.datatype.number(40000)
             };
 
@@ -121,7 +121,7 @@ describe.only('Book module: integration tests', function() {
                 tokenID: faker.datatype.number(40000)
             };
 
-        return bookModule.listChapterForSale(bookID, chapterID, data, faker.datatype.json())
+        return bookModule.listChapterForSale(chapterID, data, faker.datatype.json())
             .then(res => {
                 expect(res).to.have.property('metadataURI')
                     .that.is.a('string');

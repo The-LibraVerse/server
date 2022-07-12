@@ -31,6 +31,31 @@ describe('Auth and user flow', function() {
         });
     });
 
+    it('Login and logut', function() {
+        const { username, password } = testData.users[3];
+        let cookie;
+
+        const data = { username, password }
+
+        return request(app).post('/login').send(data)
+            .then(res => {
+                cookie = res.headers['set-cookie'][0];
+                return request(app).get('/auth').set('Cookie', cookie)
+            }).then(res => {
+                expect(res.body).to.eql({logged_in: true});
+
+                return request(app).delete('/logout').set('Cookie', cookie)
+            })
+            .then(res => {
+                // console.log('headers:', res.headers);
+                expect(res.headers).to.have.property('clear-site-data', '"cookies"');
+                return request(app).get('/auth').set('Cookie', cookie)
+            })
+            .then(res => {
+                expect(res.body).to.eql({logged_in: false});
+            });
+    });
+
     it('Auth route: Return false if user is not logged in', function() {
         return request(app).get('/auth')
             .then(res => {
