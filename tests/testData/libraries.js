@@ -4,26 +4,53 @@ const users = require('./users');
 
 const libraries = [];
 
-for (let i = 0; i<50; i++) {
-    let userIndex = (i < 5) ? 0 :  Math.floor(Math.random() * users.length);
-    if(i >= 5 && userIndex == 0)
-        userIndex = 5;
-
-    const userID = users[userIndex].id;
-
+function getRandomBook(i) {
     const bookIndex = (i < 5) ? i : Math.floor(Math.random() * books.length);
     const book = books[bookIndex];
 
-    const staleBooks = libraries.filter(lib => lib.userID == userID);
     const bookID = books[bookIndex].id;
-    // console.log('stale books:', staleBooks, 'bookd id:', bookID);
 
-        /*
-    if(staleBooks.map(e => e.bookID).includes(bookID))
-        console.log('book', bookID,  'is stale');
+    return book;
+}
+
+function anyNumberExcept(x, max) {
+    if(x < max - 1)
+        return Math.floor(Math.random() * (max - x)) + x;
     else {
-        */
-    if(!staleBooks.map(e => e.bookID).includes(bookID)) {
+        let result = x;
+
+        while(result == x) {
+            result = Math.floor(Math.random() * max);
+        }
+
+        return result;
+    }
+}
+
+for (let i = 0; i<50; i++) {
+    let book = getRandomBook(i);
+
+    let userIndex = (i > 44) ? 0 :
+        (book.id > 25) ? 7 :
+        (i <= 44) ?  anyNumberExcept(1, users.length) :
+        Math.floor(Math.random() * users.length);
+
+    const userID = users[userIndex].id;
+
+    const staleBooks = libraries.filter(lib => lib.userID == userID);
+    let isStaleBook = staleBooks.map(e => e.bookID).includes(book.id);
+
+    while(isStaleBook) {
+        isStaleBook = staleBooks.map(e => e.bookID).includes(book.id);
+
+        if(isStaleBook)
+            book = getRandomBook(i);
+        else isStaleBook = false;
+    }
+
+    const bookID = book.id;
+
+    if(!isStaleBook) {
         libraries.push({
             userID,
             bookID,
@@ -34,6 +61,5 @@ for (let i = 0; i<50; i++) {
         })
     }
 }
-
 
 module.exports = libraries;

@@ -5,11 +5,12 @@ const { faker } = require('@faker-js/faker');
 const { createStubs, stubBook, paths } = require('./book.stubs');
 const testData = require('../testData');
 
-describe.only('Testing book module', function() {
+describe('Testing book module', function() {
+    const reqObj = JSON.parse(faker.datatype.json());
+
     it('Create(): Check session manager for author id', function() {
         const userID = faker.datatype.number();
         const spy = sinon.fake.resolves(true);
-        const reqObj = faker.datatype.json();
 
         const stubs = createStubs({getSession: userID});
         stubs[paths.bookDal].create = spy;
@@ -28,7 +29,6 @@ describe.only('Testing book module', function() {
 
     it('Book.Create should throw if user is not logged in', function() {
         const stubs = createStubs({session:false});
-        // stubs[paths.session].get = sinon.fake.returns(false);
 
         const book = stubBook(stubs)
         const data = { name: faker.commerce.productName() }
@@ -40,7 +40,6 @@ describe.only('Testing book module', function() {
     });
 
     it('AddChapter(): throw if user is not author of book', function() {
-        const reqObj = faker.datatype.json();
         const dalSpy = sinon.fake.resolves(true);
         const bookID = faker.datatype.number();
 
@@ -60,7 +59,6 @@ describe.only('Testing book module', function() {
     });
 
     it('AddChapter(): throw if client does not have session', function() {
-        const reqObj = faker.datatype.json();
         const dalSpy = sinon.fake.resolves(true);
         const bookID = faker.datatype.number();
 
@@ -134,6 +132,155 @@ describe.only('Testing book module', function() {
 
         return expect(book.addChapter(faker.datatype.number(), {metadata }))
             .to.be.rejectedWith(ClientError);
+    });
+
+    it('List[Book]ForSale: fail if user is not author of book');
+
+    it('ListChapterForSale: fail if user is not author of book');
+
+    it('FetchBook: Return publish status if browser is book author', function() {
+        const author = 1;
+        const published = faker.datatype.boolean();
+        const book = {...testData.books[7], author, published };
+
+        const stubs1 = createStubs({getSession: author, book})
+        const stubs2 = createStubs({getSession: author, book})
+
+        return Promise.all([
+            stubBook(stubs1).fetchBook(12, reqObj),
+            stubBook(stubs2).fetchBook(15, reqObj)
+        ])
+            .then(resArray => {
+                resArray.forEach(res => {
+                    expect(res).to.have.property('published', published);
+                });
+            });
+    });
+
+    it('FetchBook: Return publish status if browser is book author', function() {
+        const author = 1;
+        const published = faker.datatype.boolean();
+        const book = {...testData.books[7], author, published };
+
+        const stubs1 = createStubs({getSession: 17, book})
+        const stubs2 = createStubs({getSession: 17, book})
+
+        return Promise.all([
+            stubBook(stubs1).fetchBook(12, reqObj),
+            stubBook(stubs2).fetchBook(15, reqObj)
+        ])
+            .then(resArray => {
+                resArray.forEach(res => {
+                    expect(res).to.not.have.property('published');
+                });
+            });
+    });
+
+    describe('Actions', function() {
+        const sharedActions = {
+            canSell: true,
+        }
+        const bookActions = {
+            ...sharedActions,
+        }
+        const chapterActions = {
+            ...sharedActions,
+        }
+
+        it('FetchBook - Published: return canSell if browser is book author', function() {
+            const author = 1;
+            const book = {...testData.books[7], author, published: true };
+
+            const stubs = createStubs({getSession: author, book})
+
+            return stubBook(stubs).fetchBook(12)
+                .then(res => {
+                    expect(res).to.have.property('_actions')
+                        .that.has.property('canSell', true);
+                });
+        });
+
+        it('FetchBook - Published: do not return canSell if browser is not book author', function() {
+            const id = 42
+            const book = {...testData.books[7], id, author:1, published: true };
+
+            const stubs = createStubs({getSession: 13, book})
+
+            return stubBook(stubs).fetchBook(id)
+                .then(res => {
+                    expect(res).to.have.property('_actions')
+                        .that.does.not.have.property('canSell', true);
+                });
+        });
+
+        it('FetchBook - Unpublished: do not return canSell if book is not published', function() {
+            const author = 1;
+            const bookID = 42
+            const book = {...testData.books[7], author, published: false };
+
+            const stubs1 = createStubs({getSession: author, book})
+
+            return stubBook(stubs1).fetchBook(bookID)
+                .then(res => {
+                    expect(res, 'browser is author').to.have.property('_actions')
+                        .that.does.not.have.property('canSell');
+
+                    const stubs2 = createStubs({getSession: 5, book})
+                    return stubBook(stubs2).fetchBook(bookID)
+                })
+                .then(res => {
+                    expect(res, 'browser is not author').to.have.property('_actions')
+                        .that.does.not.have.property('canSell');
+                });
+        });
+
+        it('FetchBook - CanPublish: return true if author is browsing and book is unpublished', function() {
+            const user = 15;
+            const book = {...testData.books[7], author:user, published: false };
+
+            const stubs = createStubs({getSession: user, book})
+
+            return stubBook(stubs).fetchBook(12)
+                .then(res => {
+                    expect(res).to.have.property('_actions')
+                        .that.has.property('canPublish', true);
+                });
+        });
+
+        it('FetchBook - CanPublish: return false if author is browsing and book is already published', function() {
+            const user = 15;
+            const book = {...testData.books[7], author:user, published: true };
+
+            const stubs = createStubs({getSession: user, book})
+
+            return stubBook(stubs).fetchBook(12)
+                .then(res => {
+                    expect(res).to.have.property('_actions')
+                        .that.does.not.have.property('canPublish');
+                });
+        });
+
+        it('FetchBook - CanPublish: dont return canPublish if browser is not author', function() {
+            const user = 15;
+            const book1 = {...testData.books[7], author:33, published: false };
+
+            const stubs1 = createStubs({getSession: user, book:book1})
+
+            return stubBook(stubs1).fetchBook(12)
+                .then(res => {
+                    expect(res).to.have.property('_actions')
+                        .that.does.not.have.property('canPublish');
+
+                    const book2 = {...testData.books[7], author:33, published: true };
+                    const stubs2 = createStubs({getSession: user, book:book2})
+
+                    return stubBook(stubs2).fetchBook(12)
+                }).then(res => {
+                    expect(res).to.have.property('_actions')
+                        .that.does.not.have.property('canPublish');
+
+                });
+        });
     });
 
     it('FetchChapter(): Do not return content url and metadata url if browser is not book author', function() {
@@ -233,7 +380,6 @@ describe.only('Testing book module', function() {
     });
 
     it('UserBooks(requestObject): call get userid from session manager', function() {
-        const reqObj = faker.datatype.json();
         const stubs = createStubs();
         const spy = sinon.fake.returns({userID: faker.datatype.number()});
         stubs[paths.session].get = spy;

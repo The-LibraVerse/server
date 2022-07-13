@@ -74,5 +74,16 @@ describe('Auth and user flow', function() {
             });
     })
 
+    it('View dashboard', function() {
+        return request(app).post('/login').send(testData.users[3])
+            .then(res => {
+                const cookie = res.headers['set-cookie'][0];
+                return request(app).get('/dashboard').set('Cookie', cookie)
+            })
+            .then(res => {
+                expect(res.body).to.have.property('library');
+            });
+    })
+
     it('Sign up with username and password, and update with ethereum address');
 });

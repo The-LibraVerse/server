@@ -10,7 +10,8 @@ const { ClientError, UnauthorizedError } = require('../errors');
 
 function formatChapter(c) {
     const { title, id, contentURL, content, cover,
-        published, forSale, metadataURI, metadataHash,  } = c;
+        published, forSale, tokenContract, tokenID,
+        metadataURI, metadataHash,  } = c;
 
     return {
         id,
@@ -20,6 +21,8 @@ function formatChapter(c) {
         ...content && {content},
         ...(published != null) && {published},
         ...(forSale != null) && {forSale},
+        ...tokenContract && {tokenContract},
+        ...tokenID && {tokenID},
         metadataURI: metadataURI || null,
         metadataHash,
     }
@@ -27,7 +30,8 @@ function formatChapter(c) {
 
 function formatBook(b) {
     const { id, title, cover,
-        published, forSale, metadataURI } = b;
+        published, forSale, tokenContract, tokenID,
+        metadataURI } = b;
 
     let author = (typeof b.author == 'number') ?  {id: b.author} :
         (typeof b.author == 'string') ?  {id: b.author} :
@@ -38,6 +42,8 @@ function formatBook(b) {
         author,
         ...(published != null) && {published},
         ...(forSale != null) && {forSale},
+        ...tokenContract && {tokenContract},
+        ...tokenID && {tokenID},
         ...metadataURI && {metadataURI},
     }
 }
@@ -125,7 +131,7 @@ function createdBy(param) {
         })
 }
 
-module.exports = {
+module.exports = Object.freeze({
     create(data, reqObj) {
         let author;
 
@@ -144,16 +150,16 @@ module.exports = {
 
     publish(bookID, reqObj) {
         return bookDal.fetchByID(bookID)
-        .then(res => {
-            const metadata = {
-                name: res.title,
-                image: res.cover,
-            };
+            .then(res => {
+                const metadata = {
+                    name: res.title,
+                    image: res.cover,
+                };
 
-            return ipfsAPI.uploadSingle(JSON.stringify(metadata))
-        }).then(res => {
-            return bookDal.update(bookID, {metadataHash: res.cidv1, published: true})
-        });
+                return ipfsAPI.uploadSingle(JSON.stringify(metadata))
+            }).then(res => {
+                return bookDal.update(bookID, {metadataHash: res.cidv1, published: true})
+            });
     },
 
     publishChapter(chapterID, reqObj) {
@@ -170,15 +176,21 @@ module.exports = {
             });
     },
 
-    listForSale(bookID, reqObj) {
+    listForSale(bookID, tokenDeets, reqObj) {
         const data = {forSale: true}
+        data.tokenContract = tokenDeets.tokenContract || data.contract;
+        data.tokenID = tokenDeets.tokenID;
+
         return bookDal.update(bookID, data)
         .then(res => {
         });
     },
 
-    listChapterForSale(chapterID, reqObj) {
+    listChapterForSale(chapterID, tokenDeets, reqObj) {
         const data = {forSale: true}
+        data.tokenContract = tokenDeets.tokenContract || data.contract;
+        data.tokenID = tokenDeets.tokenID;
+
         return chapterDAL.update(chapterID, data)
         .then(res => {
         });
@@ -228,7 +240,7 @@ module.exports = {
     fetchChapter(bookID, chapterID, reqObj) {
         const session = sessionManager.get(reqObj);
 
-        let chapter = {}, book = {author: {}};
+        let chapter = {}, book = {author: {}}, actions={};
         return chapterDAL.fetchByID(chapterID)
         // return chapterDAL.fetchByID(bookID, chapterID)
             .then(res => {
@@ -241,10 +253,16 @@ module.exports = {
             .then(res => {
                 chapter.content = res;
                 chapter.book = {
-                    id: bookID
+                    id: bookID,
+                    title: book.title,
+                    author: {
+                        id: book.author.id
+                    }
                 }
 
                 if(book.author && session && book.author.id === session.userID) {
+                    actions.canSell = true;
+
                     if(chapter.metadataHash) {
                         chapter.metadataURI = ipfsAPI.hashToURL(chapter.metadataHash);
                         chapter.metadataURL = ipfsAPI.hashToURL(chapter.metadataHash);
@@ -255,6 +273,8 @@ module.exports = {
                     delete chapter.metadataURI;
                     delete chapter.metadataHash;
                 }
+
+                chapter._actions = actions;
 
                 return chapter;
             });
@@ -267,11 +287,25 @@ module.exports = {
     fetchBook(bookID, reqObj) {
         const session = sessionManager.get(reqObj);
 
+        const bookActions = {}; // Actions that can be taken on the book
+
         let totalChapters=0, chapters = [], book;
 
         return bookDal.fetchByID(bookID)
             .then(res => {
                 book = res;
+                if(session.userID == book.author) {
+                    // Can add actions
+
+                    if(book.published) {
+                        bookActions.canSell = true;
+                    } else {
+                        bookActions.canPublish = true;
+                    }
+                } else {
+                    delete book.published;
+                    // delete c.contentURL;
+                }
                 if(book.metadataHash)
                     book.metadataURI = ipfsAPI.hashToURL(book.metadataHash);
 
@@ -285,8 +319,11 @@ module.exports = {
                 return chapterDAL.fetchAll(bookID)
             }).then(res => {
                 chapters = res.map(c => {
-                    if(session.userID != book.author)
+                    if(session.userID == book.author) {
+                        // Can add actions
+                    } else {
                         delete c.contentURL;
+                    }
                     return formatChapter(c)
                 });
 
@@ -296,6 +333,7 @@ module.exports = {
                 res = res[0];
 
                 return {...res,
+                    _actions: bookActions,
                     chapters,
                     totalChapters
                 };
@@ -352,4 +390,4 @@ module.exports = {
     },
 
     createdBy
-}
+})

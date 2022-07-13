@@ -1,6 +1,4 @@
-const { faker } = require('@faker-js/faker');
 const proxyquire = require('proxyquire');
-const sinon = require('sinon');
 const masterStubs = require('./stubs');
 
 const paths = {

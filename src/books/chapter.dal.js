@@ -6,6 +6,8 @@ const columnAliases = {
     cover: 'cover',
     published: 'published',
     forSale: 'for_sale',
+    tokenContract: 'token_contract',
+    tokenID: 'token_id',
     metadataHash: 'metadata_hash',
     metadataURI: 'metadata_uri',
 }
@@ -21,6 +23,7 @@ function normaliseResult(data) {
         const { _id, content_ipfs_url: contentURL, title, cover,
             book_id:bookID, author,
             published, for_sale:forSale,
+            token_contract: tokenContract, token_id: tokenID,
             metadata_uri:metadataURI, metadata_hash:metadataHash  } = datum;
 
         return {
@@ -31,6 +34,8 @@ function normaliseResult(data) {
             ...bookID && {bookID},
             ...(published != null) && {published},
             ...(forSale != null) && {forSale},
+            ...tokenContract && {tokenContract},
+            ...tokenID && {tokenID},
             ...metadataURI && {metadataURI},
             ...metadataHash && {metadataHash},
         }

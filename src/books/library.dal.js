@@ -30,11 +30,20 @@ function addToLibrary(userID, bookID) {
 }
 
 // returns books
-function fetch(userID) {
-    const query = `SELECT * from ${table}
+function fetch(userID, options={}) {
+    let orderBy = options.orderBy;
+
+    let  query = `SELECT * from ${table}
         LEFT JOIN books book on book._id = book_id
         WHERE user_id=$1`;
     const values = [userID];
+
+    switch(orderBy) {
+        case 'dateAdded':
+        default:
+            query += ' ORDER BY date_added desc';
+            break;
+    }
 
     return db.query(query, values)
     .then(res => normalise(res.rows));

@@ -2,11 +2,11 @@ const fs = require('fs');
 const { faker } = require('@faker-js/faker');
 const ipfsUpload = require('../helpers/ipfsUpload');
 
-const numChapters = 50;
+const numChapters = 100;
 const chapters = [];
 
 function writeFile(path, content) {
-    const folderPath = `./chapterContent`;
+    const folderPath = `./tests/testData/chapterContent`;
 
     // If chaptercontent dir doesn't exist, create it
     try {
@@ -20,18 +20,7 @@ function writeFile(path, content) {
     fs.writeFileSync(`${folderPath}/${path}`, content);
 }
 
-function writeFiles() {
-    const folderPath = `./chapterContent`;
-
-    // If chaptercontent dir doesn't exist, create it
-    try {
-        if (!fs.existsSync(folderPath)) {
-            fs.mkdirSync(folderPath);
-        }
-    } catch (err) {
-        console.error(err);
-    }
-
+function createChapters() {
     let promiseChain = Promise.resolve();
 
     for (let i=1; i<= numChapters; i++) {
@@ -39,8 +28,6 @@ function writeFiles() {
         const content = faker.lorem.paragraphs(numParagraphs);
 
         chapters.push({ content });
-
-        writeFile(`${i}.txt`, content);
     }
 
     return promiseChain;
@@ -63,7 +50,7 @@ function uploadToIPFS() {
 }
 
 function main() {
-    return writeFiles()
+    return createChapters()
     .then(res => {
         return uploadToIPFS();
     });

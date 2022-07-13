@@ -17,6 +17,7 @@ for (let i=0; i<30; i++) {
         (i == 3 || id == 14) ? true : faker.datatype.boolean();
 
     const forSale = !published ? false : faker.datatype.boolean();
+
     const metadataHash = !published ? null : 'bafybe' + faker.random.alphaNumeric(53);
     const metadataURI = metadataHash ? 'http://' + metadataHash + '.ipfs.localhost:8080' : null;
 

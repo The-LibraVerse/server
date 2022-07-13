@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const config = require('./config');
-const routes = require('./src/routes');
+const router = require('./src/router');
 const errorHandler = require('./src/errorHandler');
 
 app.use(helmet());
@@ -43,7 +43,7 @@ app.use(responseSender);
 app.use(session(sessionConfig));
 
 // Routes
-app.use(routes);
+app.use(router);
 app.use(errorHandler);
 
 // Check that ipfs gateway is present

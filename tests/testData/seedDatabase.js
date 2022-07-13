@@ -28,7 +28,7 @@ function main() {
         });
 
         promiseChain = promiseChain.then(() => db.query(query, values))
-            .then(db.query(`SELECT setval('"users__id_seq"', 55);`))
+            .then(db.query(`SELECT setval('"users__id_seq"', 200);`))
             .catch(e => console.log('e:', e));
     }
 
@@ -57,7 +57,7 @@ function main() {
         });
 
         promiseChain = promiseChain.then(() => db.query(query, values))
-            .then(db.query(`SELECT setval('"books__id_seq"', 50);`))
+            .then(db.query(`SELECT setval('"books__id_seq"', 200);`))
         // .catch(e => console.log('e:', e));
     }
 
@@ -80,7 +80,7 @@ function main() {
         });
 
         promiseChain = promiseChain.then(() => db.query(query, values))
-            .then(db.query(`SELECT setval('"library__id_seq"', 100);`))
+            .then(db.query(`SELECT setval('"library__id_seq"', 200);`))
         // .catch(e => e);
             // .catch(e => console.log(e));
             .catch(e => {
@@ -117,7 +117,7 @@ function main() {
         })
 
         promiseChain = promiseChain.then(() => db.query(query, values))
-            .then(db.query(`SELECT setval('"chapters__id_seq"', 50);`))
+            .then(db.query(`SELECT setval('"chapters__id_seq"', 200);`))
             .catch(e => e);
         // .catch(e => console.log('e:', e));
     }

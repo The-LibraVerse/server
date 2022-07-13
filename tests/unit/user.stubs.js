@@ -1,6 +1,4 @@
-const { faker } = require('@faker-js/faker');
 const proxyquire = require('proxyquire');
-const sinon = require('sinon');
 const masterStubs = require('./stubs');
 
 const paths = {
@@ -25,6 +23,10 @@ function createStubs(stubsInit) {
 function stubUserModule(stubs) {
     if(!stubs)
         stubs = createStubs();
+    else if(stubs && !stubs[paths.sessionManager] && !stubs[paths.userDal]
+        && !stubs[paths.libraryDal]
+    )
+        stubs = createStubs(stubs)
 
     return proxyquire(userPath, stubs);
 }

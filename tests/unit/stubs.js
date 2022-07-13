@@ -9,12 +9,18 @@ module.exports = function(results={}) {
         typeof results.author == 'number' ? {id: results.author} :
         {id: faker.datatype.number()};
 
-    const chapter = results.chapter || {};
-    const chapters = results.chapters || [];
+    const chapter = results.chapter || testData.chapters[9];
+
+    const chapters = results.chapters || testData.chapters.slice(1,9);
 
     const countChapters = chapters.length;
 
     const rSession = results.getSession || results.session;
+
+    const users = results.users || testData.users;
+
+    const user = results.user || testData.users[5];
+    const userByUsername = results.userByUsername || results.byUsername || user;
 
     const getSession = rSession ?
         typeof rSession == 'number' ? {userID: rSession} :
@@ -34,13 +40,9 @@ module.exports = function(results={}) {
         userDal: {
             create: sinon.fake.resolves({id: 3}),
             update: sinon.fake.resolves({id: faker.datatype.number()}),
-            fetchByIDs: sinon.fake.resolves([{id: faker.datatype.number()}]),
-            fetchByID: sinon.fake.resolves({id: faker.datatype.number()}),
-            fetchByUsername: sinon.fake.resolves({
-                id: faker.datatype.number(),
-                username: faker.internet.userName(),
-                password: faker.internet.password()
-            }),
+            fetchByIDs: sinon.fake.resolves(users),
+            fetchByID: sinon.fake.resolves(user),
+            fetchByUsername: sinon.fake.resolves(userByUsername),
         },
         libraryDal: {
             addToLibrary: sinon.fake.resolves(true),

@@ -5,9 +5,11 @@ const columnAliases = {
     title: 'title',
     cover: 'cover',
     published: 'published',
+    forSale: 'for_sale',
+    tokenContract: 'token_contract',
+    tokenID: 'token_id',
     metadataHash: 'metadata_hash',
     metadataURI: 'metadata_uri',
-    forSale: 'for_sale',
 }
 
 function normaliseResult(data) {
@@ -20,6 +22,7 @@ function normaliseResult(data) {
     return data.map(datum => {
         const { _id, cover, title, author,
             published, for_sale:forSale,
+            token_contract: tokenContract, token_id: tokenID,
             metadata_uri:metadataURI, metadata_hash:metadataHash } = datum;
 
         return {
@@ -29,6 +32,8 @@ function normaliseResult(data) {
             ...metadataURI && {metadataURI},
             ...metadataHash && {metadataHash},
             ...title && {title},
+            ...tokenContract && {tokenContract},
+            ...tokenID && {tokenID},
             ...(published != null) && {published},
             ...author && {author},
         }
@@ -47,7 +52,6 @@ module.exports = {
     },
 
     update(id, data) {
-        // const columns = ['title', 'cover', 'metadataHash'];
         const values = [id];
 
         let i = 2;
