@@ -2,6 +2,8 @@ const { faker } = require('@faker-js/faker');
 const books = require('./books');
 const ipfsUpload = require('../helpers/ipfsUpload');
 
+const publishedChapters = [], unpublishedChapters = [];
+
 const chapters = require('./chapterContent/chapters.json');
 
 const modChapters = chapters.map((c, i) => {
@@ -26,7 +28,7 @@ const modChapters = chapters.map((c, i) => {
     const forSale = (!published) ? false :
         (bookID == 7) ? true : faker.datatype.boolean();
 
-    return{
+    const chapter = {
         _content,
         cover,
         id,
@@ -38,6 +40,15 @@ const modChapters = chapters.map((c, i) => {
         metadataHash,
         metadataURI,
     }
+
+    if(published === true)
+        publishedChapters.push(chapter);
+    else if(published === false)
+        unpublishedChapters.push(chapter);
+
+    return chapter;
 });
 
-module.exports = { chapters: Object.freeze(modChapters) };
+module.exports = { chapters: Object.freeze(modChapters),
+    unpublishedChapters: Object.freeze(unpublishedChapters),
+    publishedChapters: Object.freeze(publishedChapters) };

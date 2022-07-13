@@ -3,30 +3,33 @@ const routes = require('../src/routes');
 module.exports = function(req, res, next) {
     const oldSend = res.send;
 
-    res.send = function(data) {
+    res.send = function(response) {
         const links = {};
         res.send = oldSend;
 
         const unparsedRoute = req.route.path;
 
-        if(data) {
-            if(data.clearSiteData) {
-                let headerVal = data.clearSiteData;
+        if(response) {
+            if(Array.isArray(response))
+                response = { data: response }
 
-                if(data.clearSiteData === true)
+            if(response.clearSiteData) {
+                let headerVal = response.clearSiteData;
+
+                if(response.clearSiteData === true)
                     headerVal = '';
 
                 res.set('Clear-Site-Data', headerVal);
 
-                delete data.clearSiteData;
-            } else if(data.clearCookies) {
+                delete response.clearSiteData;
+            } else if(response.clearCookies) {
                 res.set('Clear-Site-Data', '"cookies"');
-                delete data.clearCookies;
+                delete response.clearCookies;
             }
 
-            if(data._actions) {
-                const actions = data._actions;
-                // console.log('actions:', data._actions);
+            if(response._actions) {
+                const actions = response._actions;
+                // console.log('actions:', response._actions);
                 // console.log('request', req, req.path);
                 // console.log('request', req.path, req.params);
 
@@ -80,7 +83,7 @@ module.exports = function(req, res, next) {
             }
         }
 
-        return res.send({...data, _links: links});
+        return res.send({...response, _links: links});
     }
     next();
 }

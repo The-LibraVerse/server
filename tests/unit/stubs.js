@@ -3,11 +3,19 @@ const { faker } = require('@faker-js/faker');
 const testData = require('../testData');
 
 module.exports = function(results={}) {
-    const books = results.books || [],
-        book = results.book || testData.books[3];
+    let books = results.books || [ ...testData.books ],
+        book = results.book || (
+        (books.length > 0) ? books[0] : { ...testData.books[3] });
+
     const author = results.author && typeof results.author == 'object' ? results.author :
         typeof results.author == 'number' ? {id: results.author} :
         {id: faker.datatype.number()};
+
+    if(results.book)
+        book = {...results.book};
+    else {
+        book = {...book, author: author.id};
+    }
 
     const chapter = results.chapter || testData.chapters[9];
 
@@ -26,9 +34,12 @@ module.exports = function(results={}) {
         typeof rSession == 'number' ? {userID: rSession} :
             rSession : false;
 
+    const fetchResult = results.fetch || true;
+
     const externalFetch= {
-        fetch: sinon.fake.resolves(true),
+        fetch: sinon.fake.resolves(fetchResult),
     };
+
     return {
         externalFetch,
         fetchExternal: externalFetch,
@@ -50,6 +61,7 @@ module.exports = function(results={}) {
         },
         bookDal: {
             create: sinon.fake.resolves({id: 3}),
+            update: sinon.fake.resolves(true),
             fetchAuthorID: sinon.fake.resolves(author.id),
             fetchByID: sinon.fake.resolves(book),
             fetchByCreator: sinon.fake.resolves(books),
@@ -59,6 +71,7 @@ module.exports = function(results={}) {
         chapterDal: {
             create: sinon.fake.resolves({
                 id: faker.datatype.number()}),
+            update: sinon.fake.resolves(true),
             fetchByID: sinon.fake.resolves(chapter),
             fetchAll: sinon.fake.resolves(chapters),
             fetchCount: sinon.fake.resolves(countChapters),

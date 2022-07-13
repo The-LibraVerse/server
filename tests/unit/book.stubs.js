@@ -9,12 +9,18 @@ const paths = {
     fetchExternal: '../externalFetch',
     libraryDal: '../books/library.dal',
     session: '../sessionManager',
+    sessionManager: '../sessionManager',
     user: '../user',
     userModule: '../user',
     userDal: '../user',
 }
 
 const bookPath = '../../src/books/book';
+
+function isValidStubs(stubs) {
+    return stubs && stubs[paths.session] && stubs[paths.userDal]
+        && stubs[paths.libraryDal];
+}
 
 function createStubs(stubsInit) {
     const allStubs = masterStubs(stubsInit);
@@ -33,6 +39,8 @@ function createStubs(stubsInit) {
 function stubBook(stubs) {
     if(!stubs)
         stubs = createStubs();
+    else if(!isValidStubs(stubs))
+        stubs = createStubs(stubs)
 
     return proxyquire(bookPath, stubs);
 }

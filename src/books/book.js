@@ -177,23 +177,46 @@ module.exports = Object.freeze({
     },
 
     listForSale(bookID, tokenDeets, reqObj) {
+        const session = sessionManager.get(reqObj);
+
+        if(!session)
+            return Promise.reject(
+                new UnauthorizedError('You need to be logged in to complete this action'));
+
         const data = {forSale: true}
         data.tokenContract = tokenDeets.tokenContract || data.contract;
         data.tokenID = tokenDeets.tokenID;
 
-        return bookDal.update(bookID, data)
-        .then(res => {
-        });
+        return bookDal.fetchByID(bookID)
+            .then(res => {
+                if(session.userID && session.userID !== res.author)
+                    throw new UnauthorizedError('Only this book\'s author can do this.');
+
+                else
+                    return bookDal.update(bookID, data)
+            });
     },
 
     listChapterForSale(chapterID, tokenDeets, reqObj) {
+        const session = sessionManager.get(reqObj);
+
+        if(!session && session.userID)
+            return Promise.reject(new UnauthorizedError('You need to be logged in to complete this action'));
+        else session.userID = parseInt(session.userID);
+
         const data = {forSale: true}
         data.tokenContract = tokenDeets.tokenContract || data.contract;
         data.tokenID = tokenDeets.tokenID;
 
-        return chapterDAL.update(chapterID, data)
-        .then(res => {
-        });
+        return chapterDAL.fetchByID(chapterID)
+            .then(res => {
+                return bookDal.fetchByID(res.bookID)
+            }).then(res => {
+                if(res.author != session.userID)
+                    throw new UnauthorizedError('You are not authorized to carry out this action');
+                else
+                    return chapterDAL.update(chapterID, data)
+            });
     },
 
     /**
@@ -318,15 +341,23 @@ module.exports = Object.freeze({
 
                 return chapterDAL.fetchAll(bookID)
             }).then(res => {
-                chapters = res.map(c => {
+                chapters = [ ...res ];
+                chapters = chapters.map(_c => {
+                    const c = Object.assign({}, _c);
+
                     if(session.userID == book.author) {
                         // Can add actions
                     } else {
                         delete c.contentURL;
                     }
-                    return formatChapter(c)
+                    return c;
                 });
 
+                if(session.userID != book.author) {
+                    chapters = chapters.filter(c => c.published === true);
+                }
+
+                chapters = chapters.map(c => formatChapter(c))
                 return fetchAuthors([book])
             })
             .then(res => {
@@ -343,7 +374,14 @@ module.exports = Object.freeze({
     fetchAll() {
         return bookDal.fetchAll()
             .then(res => {
-                return fetchAuthors(res)
+                return fetchAuthors(
+                    res.filter(b => b.published)
+                    .map(_b => {
+                        const b = Object.assign({}, _b);
+                        delete b.published;
+                        return b;
+                    })
+                )
             })
     },
 

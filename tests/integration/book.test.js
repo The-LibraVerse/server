@@ -151,7 +151,7 @@ describe('Book module: integration tests', function() {
             });
     });
 
-    it('Fetch should return book book data', function() {
+    it('Fetch should return book data', function() {
         const book = testData.books[4], bookID = book.id;
         const chapters = testData.chapters.filter(c => c.bookID == bookID);
         const totalChapters = chapters.length;
@@ -183,12 +183,15 @@ describe('Book module: integration tests', function() {
             });
     });
 
-    it('FetchAll should return book covers', function() {
+    it('FetchAll should return book data', function() {
         return bookModule.fetchAll()
             .then(res => {
                 expect(res).to.not.be.empty;
                 res.forEach((b, i) => {
+                    expect(b).to.have.keys('id', 'cover', 'title', 'author', 'forSale', 'tokenContract', 'tokenID');
+                    expect(b).to.have.property('id', testData.books[i].id);
                     expect(b).to.have.property('cover', testData.books[i].cover);
+                    expect(b).to.have.property('title', testData.books[i].title);
                 });
             });
     });

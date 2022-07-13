@@ -16,6 +16,19 @@ describe('ResponseSender module: integration tests', function() {
         app.use(responseSender);
     });
 
+    it('If route returns an array, change to object', function() {
+        const arr = faker.datatype.array();
+
+        app.get('/', function(req, res) {
+            return res.send(arr);
+        });
+
+        return request(app).get('/')
+        .then(res => {
+            expect(res.body).to.have.property('data').that.has.members(arr);
+        });
+    });
+
     describe('Route: Fetch Book', function() {
         const route = '/book/3';
 
