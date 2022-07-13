@@ -21,21 +21,21 @@ function normaliseResult(data) {
 
     return data.map(datum => {
         const { _id, cover, title, author,
-            published, for_sale:forSale,
-            token_contract: tokenContract, token_id: tokenID,
+            published, for_sale:forSale=null,
+            token_contract: tokenContract=null, token_id: tokenID,
             metadata_uri:metadataURI, metadata_hash:metadataHash } = datum;
 
         return {
             id: _id,
             ...(forSale != null) && {forSale},
-            ...cover && {cover},
-            ...metadataURI && {metadataURI},
-            ...metadataHash && {metadataHash},
-            ...title && {title},
-            ...tokenContract && {tokenContract},
-            ...tokenID && {tokenID},
-            ...(published != null) && {published},
-            ...author && {author},
+            cover,
+            tokenContract,
+            tokenID,
+            metadataURI,
+            metadataHash,
+            title,
+            published,
+            author,
         }
     });
 }

@@ -28,6 +28,9 @@ const modChapters = chapters.map((c, i) => {
     const forSale = (!published) ? false :
         (bookID == 7) ? true : faker.datatype.boolean();
 
+    const tokenContract = forSale ? faker.finance.ethereumAddress() : null;
+    const tokenID = forSale ? faker.datatype.number() : null;
+
     const chapter = {
         _content,
         cover,
@@ -39,6 +42,8 @@ const modChapters = chapters.map((c, i) => {
         published,
         metadataHash,
         metadataURI,
+        tokenContract,
+        tokenID,
     }
 
     if(published === true)

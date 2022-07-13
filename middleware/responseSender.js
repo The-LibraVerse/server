@@ -43,7 +43,7 @@ module.exports = function(req, res, next) {
                         }
                     }
                 }
-                // fetch book
+
                 else if(unparsedRoute == routes.fetchBook) {
                     const book_id = req.params.book_id;
                     if(actions.canSell === true) {
@@ -63,6 +63,10 @@ module.exports = function(req, res, next) {
                             href: '/book/' + book_id + '/chapters',
                             method: 'POST'
                         }
+                    }
+                    if(actions.canViewChapters === true) {
+                        // console.log('chapters', response);
+                        const chapters = response.chapters || [];
                     }
                 }
                 else if(unparsedRoute === routes.fetchChapter) {

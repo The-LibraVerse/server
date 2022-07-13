@@ -56,7 +56,8 @@ describe('User module: integration tests - Fetch', function() {
                 resArray.forEach(res => {
                     expect(res).to.not.be.empty;
                     expect(res).to.have.keys('id', 'name', 'username',
-                    'library', 'creations', '_actions');
+                        'library', 'creations', '_actions',
+                    );
                     expect(res).to.have.property('id', user.id);
                     expect(res).to.have.property('name', user.name);
                     expect(res).to.have.property('username', user.username);
@@ -72,16 +73,20 @@ describe('User module: integration tests - Fetch', function() {
                     });
 
                     res.creations.forEach(b => {
-                        expect(b, 'Books written by user').to.have.keys('title', 'cover', 'id', 'author',
-                            'published', 'forSale', 'metadataURI', 'metadataHash');
+                        expect(b, 'Books written by user').to.have.keys(
+                            'id', 'title', 'cover', 'author',
+                            'published', 'forSale', 'metadataURI', 'metadataHash',
+                            'tokenContract', 'tokenID'
+                        );
                         expect(b.title).to.be.a('string');
                         expect(b.author).to.have.property('id', userID);
                     });
 
                     res.library.forEach((lib, i) => {
-                        expect(lib, 'Library').to.have.keys('title', 'cover', 'id', 'author',
+                        const bk = testData.books.filter(b => b.id == lib.id)[0];
+                        expect(lib, 'Library').to.have.keys('id', 'title', 'cover', 'author',
                             'forSale');
-                        expect(lib).to.have.property('title', library[i].bookTitle);
+                        expect(lib).to.have.property('title', bk.title);
                     });
                 });
             });

@@ -34,7 +34,8 @@ function main() {
 
     {
         let  query = `INSERT INTO books(_id, title, cover, author,
-            for_sale, published,
+            published, for_sale,
+            token_contract, token_id,
             metadata_uri, metadata_hash)
         VALUES `;
 
@@ -44,14 +45,15 @@ function main() {
             if(i > 0)
                 query += ',';
 
-            const j = i * 8;
+            const j = i * 10;
 
             query += `(
-                $${j + 1}, $${j + 2}, $${j + 3}, $${j + 4}, $${j + 5}, $${j + 6}, $${j + 7}, $${j + 8})`;
+                $${j + 1}, $${j + 2}, $${j + 3}, $${j + 4}, $${j + 5}, $${j + 6}, $${j + 7}, $${j + 8}, $${j+9}, $${j+10})`;
 
             values.push(
                 book.id, book.title, book.cover, book.author,
-                book.forSale, book.published,
+                book.published, book.forSale,
+                book.tokenContract, book.tokenID,
                 book.metadataURI, book.metadataHash,
             );
         });
@@ -94,7 +96,9 @@ function main() {
     }
 
     {
-        let query = `INSERT INTO chapters(_id, book_id, content_ipfs_url, title, cover, for_sale, published, metadata_uri)
+        let query = `INSERT INTO chapters(_id, book_id, content_ipfs_url, title, cover, for_sale, published,
+            token_contract, token_id,
+            metadata_uri)
         VALUES `;
 
         const values = [];
@@ -103,15 +107,17 @@ function main() {
             if(i > 0)
                 query += ',';
 
-            const j = i * 8;
+            const j = i * 10;
 
             query += `(
-                $${j + 1}, $${j + 2}, $${j + 3}, $${j + 4}, $${j + 5}, $${j + 6}, $${j + 7}, $${j + 8}
+                $${j + 1}, $${j + 2}, $${j + 3}, $${j + 4}, $${j + 5}, $${j + 6}, $${j + 7}, $${j + 8}, $${j + 9}, $${j + 10}
             )`;
 
             values.push(
                 chapter.id, chapter.bookID, chapter.contentURL, chapter.title, chapter.cover,
-                chapter.forSale, chapter.published, chapter.metadataURI,
+                chapter.forSale, chapter.published,
+                chapter.tokenContract, chapter.tokenID,
+                chapter.metadataURI,
 
             );
         })

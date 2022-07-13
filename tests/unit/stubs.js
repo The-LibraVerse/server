@@ -34,15 +34,28 @@ module.exports = function(results={}) {
         typeof rSession == 'number' ? {userID: rSession} :
             rSession : false;
 
+    if(!getSession.userID)
+        getSession.userID = getSession.id || faker.datatype.number();
+
     const fetchResult = results.fetch || true;
 
     const externalFetch= {
         fetch: sinon.fake.resolves(fetchResult),
     };
 
+
+    const erc1155Balance = (results.erc1155 && results.erc1155.balance) ? results.erc1155.balance :
+        (!isNaN(results.erc1155) ? results.erc1155 : 0);
+
+    const erc1155BalanceMethod = sinon.fake.resolves(erc1155Balance);
+
     return {
         externalFetch,
         fetchExternal: externalFetch,
+        erc1155: {
+            balance: erc1155BalanceMethod,
+            balanceOf: erc1155BalanceMethod,
+        },
         sessionManager: {
             create: sinon.fake.returns(true),
             get: sinon.fake.returns(getSession),

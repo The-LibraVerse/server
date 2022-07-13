@@ -131,7 +131,7 @@ describe('Book module: integration tests', function() {
             });
     });
 
-    it('Fetch chapter: should return book details', function() {
+    it('FetchChapter: should return book details', function() {
         const chapter = testData.chapters[2],
             book = testData.books[chapter.bookID],
             author = testData.users.filter(u => u.id == book.author)[0];
@@ -141,8 +141,9 @@ describe('Book module: integration tests', function() {
                 expect(res).to.not.be.undefined;
                 expect(res).to.have.keys('id', 'cover', 'title', 'content',
                     'book', 'contentURL',
-                    'published', 'forSale', 'metadataURI', 'metadataHash',
-                    '_actions',
+                    'published', 'metadataURI', 'metadataHash',
+                    'forSale', 'tokenContract', 'tokenID',
+                    '_actions', 
                 );
                 expect(res.book, 'book details').to.have.property('title');
                 expect(res.book, 'book details').to.have.property('author')
@@ -151,8 +152,8 @@ describe('Book module: integration tests', function() {
             });
     });
 
-    it('Fetch should return book data', function() {
-        const book = testData.books[4], bookID = book.id;
+    it('FetchBook should return book data', function() {
+        const book = testData.books[3], bookID = book.id;
         const chapters = testData.chapters.filter(c => c.bookID == bookID);
         const totalChapters = chapters.length;
 
@@ -160,26 +161,41 @@ describe('Book module: integration tests', function() {
             .then(res => {
                 expect(res).to.have.keys('id', 'cover', 'title', 'author',
                     'published', 'forSale', 'metadataURI', 'totalChapters', 'chapters',
-                    '_actions',
+                    '_actions', 'tokenID', 'tokenContract'
                 );
 
                 expect(res).to.have.property('id', book.id);
                 expect(res).to.have.property('title', book.title);
                 expect(res).to.have.property('cover', book.cover);
                 expect(res).to.have.property('published', book.published);
-                expect(res).to.have.property('forSale', book.forSale);
                 expect(res).to.have.property('metadataURI', book.metadataURI);
+
+                expect(res).to.have.property('forSale', book.forSale);
+                expect(res).to.have.property('tokenContract', book.tokenContract);
+                expect(res).to.have.property('tokenID', book.tokenID);
+                expect(res.tokenContract).to.not.be.null;
+                expect(res.tokenID).to.not.be.null;
+
                 expect(res.chapters).to.not.be.empty;
                 expect(res.chapters).to.have.lengthOf(totalChapters);
                 expect(res).to.have.property('totalChapters', totalChapters);
                 res.chapters.forEach((c, i) => {
                     expect(c).to.have.keys('id', 'title', 'cover',
-                        'forSale', 'published', 'contentURL',
+                        'forSale', 'tokenContract', 'tokenID', 'published', 'contentURL',
                         'metadataURI', 'metadataHash');
-                    expect(c).to.have.property('id', chapters[i].id);
-                    expect(c).to.have.property('title', chapters[i].title);
-                    expect(c).to.have.property('cover', chapters[i].cover);
+
+                    const ch_ = chapters.filter(c__ => c__.id == c.id)[0];
+
+                    expect(c).to.have.property('id', ch_.id).and.not.be.undefined;
+                    expect(c).to.have.property('title', ch_.title).and.not.be.undefined;
+                    expect(c).to.have.property('cover', ch_.cover).and.not.be.undefined;
                 });
+                return bookModule.fetchBook(3)
+            })
+            .then(res => {
+                expect(res.forSale).to.be.false;
+                expect(res.tokenContract).to.be.null;
+                expect(res.tokenID).to.be.null;
             });
     });
 
@@ -188,10 +204,13 @@ describe('Book module: integration tests', function() {
             .then(res => {
                 expect(res).to.not.be.empty;
                 res.forEach((b, i) => {
-                    expect(b).to.have.keys('id', 'cover', 'title', 'author', 'forSale', 'tokenContract', 'tokenID');
-                    expect(b).to.have.property('id', testData.books[i].id);
-                    expect(b).to.have.property('cover', testData.books[i].cover);
-                    expect(b).to.have.property('title', testData.books[i].title);
+                    const bk = testData.books.filter(b_ => b_.id == b.id)[0];
+
+                    expect(b).to.have.keys('id', 'cover', 'title', 'author',
+                        'forSale', 'tokenContract', 'tokenID');
+                    expect(b).to.have.property('id', bk.id);
+                    expect(b).to.have.property('cover', bk.cover);
+                    expect(b).to.have.property('title', bk.title);
                 });
             });
     });

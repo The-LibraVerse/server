@@ -1,33 +1,14 @@
 const { expect }  =require('chai');
-const { ClientError, UnauthorizedError } = require('../../src/errors');
+const { ClientError, UnauthorizedError } = require('../../../src/errors');
 const sinon = require('sinon');
 const { faker } = require('@faker-js/faker');
 const { createStubs, stubBook, paths } = require('./book.stubs');
-const testData = require('../testData');
+const testData = require('../../testData');
 
 describe('Testing book module', function() {
     const reqObj = JSON.parse(faker.datatype.json());
 
-    it('Create(): Check session manager for author id', function() {
-        const userID = faker.datatype.number();
-        const spy = sinon.fake.resolves(true);
-
-        const stubs = createStubs({getSession: userID});
-        stubs[paths.bookDal].create = spy;
-
-        const sessionManagerSpy = stubs[paths.session].get;
-
-        const book = stubBook(stubs)
-        const data = { name: faker.commerce.productName() }
-
-        return book.create(data, reqObj)
-            .then(() => {
-                sinon.assert.calledWith(spy, sinon.match.has('author', userID));
-                sinon.assert.calledWith(sessionManagerSpy, reqObj);
-            });
-    });
-
-    it('Book.Create should throw if user is not logged in', function() {
+    it('Create: throw if user is not logged in', function() {
         const stubs = createStubs({session:false});
 
         const book = stubBook(stubs)
@@ -134,109 +115,13 @@ describe('Testing book module', function() {
             .to.be.rejectedWith(ClientError);
     });
 
-    it('List[Book]ForSale: fail if user is not author of book', function() {
-        const tokenDeets = {
-            contract: faker.finance.ethereumAddress(), tokenID: 3};
-
-        const stubs1 = createStubs();
-        const bookUpdateSpy1 = stubs1[paths.bookDal].update;
-        const bookModule1 = stubBook(stubs1);
-
-        const stubs2 = createStubs({ author: 59, getSession: 89});
-        const bookUpdateSpy2 = stubs2[paths.bookDal].update;
-        const bookModule2 = stubBook(stubs2);
-
-        return expect(bookModule1.listForSale(faker.datatype.number(), tokenDeets, reqObj))
-            .to.be.rejectedWith(UnauthorizedError)
-            .then(() => expect(bookModule2.listForSale(faker.datatype.number(), tokenDeets, reqObj))
-                .to.be.rejectedWith(UnauthorizedError))
-            .then(() => {
-                sinon.assert.notCalled(bookUpdateSpy1);
-                sinon.assert.notCalled(bookUpdateSpy2);
-            });
-    });
-
-    it('List[Book]ForSale: be fulfilled if user is book\'s author', function() {
-        const tokenDeets = {
-            contract: faker.finance.ethereumAddress(), tokenID: 3};
-
-        const stubs = createStubs({ author: 59, getSession: 59});
-        const bookModule1 = stubBook(stubs);
-
-        return bookModule1.listForSale(faker.datatype.number(), tokenDeets, reqObj)
-            .then(res => {
-                sinon.assert.called( stubs[paths.bookDal].update );
-            });
-    });
-
-    it('ListChapterForSale: fail if user is not author of book', function() {
-        const tokenDeets = {
-            contract: faker.finance.ethereumAddress(), tokenID: 3};
-
-        const stubs1 = createStubs({author: 50, getSession: 105 });
-        const updateChapterSpy1 = stubs1[paths.chapterDal].update;
-        const bookModule1 = stubBook(stubs1);
-
-        const stubs2 = createStubs({author: 50, getSession: false });
-        const updateChapterSpy2 = stubs2[paths.chapterDal].update;
-        const bookModule2 = stubBook(stubs2);
-
-        return expect(bookModule1.listChapterForSale(faker.datatype.number(), tokenDeets, reqObj))
-            .to.be.rejectedWith(UnauthorizedError)
-
-            .then(() => expect(bookModule2.listChapterForSale(faker.datatype.number(), tokenDeets, reqObj))
-                .to.be.rejectedWith(UnauthorizedError))
-
-            .then(() => {
-                sinon.assert.notCalled(updateChapterSpy1);
-                sinon.assert.notCalled(updateChapterSpy2);
-            });
-    });
-
-    it('ListChapterForSale: be fulfilled if user is book\'s author', function() {
-        const tokenDeets = {
-            contract: faker.finance.ethereumAddress(), tokenID: 3};
-
-        const stubs = createStubs({author: 50, getSession: 50 });
-        const chapterUpdateSpy = stubs[paths.chapterDal].update;
-        const bookModule = stubBook(stubs);
-
-        return bookModule.listChapterForSale(faker.datatype.number(), tokenDeets, reqObj)
-        .then(res => {
-            sinon.assert.called(chapterUpdateSpy);
-        });
-    });
-
-    it('FetchBook: Return publish status if browser is book author', function() {
-        const author = 1;
-        const published = faker.datatype.boolean();
-        // const published = true;
-        const book = {...testData.books[7], author, published };
-
-        const stubs1 = createStubs({getSession: author, book})
-        const stubs2 = createStubs({getSession: author, book})
-
-        return Promise.all([
-            stubBook(stubs1).fetchBook(12, reqObj),
-            stubBook(stubs2).fetchBook(15, reqObj)
-        ])
-            .then(resArray => {
-                resArray.forEach(res => {
-                    expect(res).to.have.property('published', published);
-                });
-            });
-    });
-
-    it('FetchBook: Do not eturn publish status if browser is book author', function() {
+    it('FetchBook: Do not return publish status if browser is NOT book author', function() {
         const author = 1;
         const published = faker.datatype.boolean();
         const book = {...testData.books[7], author, published };
 
-        const stubs1 = createStubs({getSession: 17, book})
-        const stubs2 = createStubs({getSession: 17, book})
-
-        const mod1 = stubBook(stubs1).fetchBook(12, reqObj),
-            mod2 = stubBook(stubs2).fetchBook(15, reqObj)
+        const mod1 = stubBook({book}).fetchBook(12, reqObj),
+            mod2 = stubBook({getSession: 17, book}).fetchBook(15, reqObj)
 
         return Promise.all([
             mod1, mod2
@@ -248,42 +133,65 @@ describe('Testing book module', function() {
             });
     });
 
-    it('FetchBook: Return all chapters, published and unpublished, if browser is book author', function() {
-        const author = 1;
-        const published = faker.datatype.boolean();
+    describe('Returning book metadata', function() {
+        const author = 12;
+        const book = {
+            ...testData.books[7], author,
+            metadataHash:faker.random.alphaNumeric(20),
+            metadataURI:faker.internet.url() 
+        }, chapters = testData.chapters.slice(0, 17)
+            .map(c => ({...c, bookID: book.id, published:true}));
 
-        const pubChapters = testData.chapters.slice(0, 10)
-        .map(c => ({...c, published: true}));
+        const userIsAuthorStubs = createStubs({getSession: author, book, chapters}),
+            userIsNotAuthorStubs = createStubs({getSession: 15, book, chapters})
 
-        const unpubChapters = testData.chapters.slice(30, 50)
-        .map(c => ({ ...c, published: false }));
 
-        const chapters = [...pubChapters, ...unpubChapters];
-
-        const book = {...testData.books[7], author, published };
-
-        const stubs1 = createStubs({getSession: author, book, chapters})
-        const stubs2 = createStubs({getSession: author, book, chapters})
-
-        return Promise.all([
-            stubBook(stubs1).fetchBook(12, reqObj),
-            stubBook(stubs2).fetchBook(15, reqObj)
-        ])
-            .then(resArray => {
-                resArray.forEach(res => {
-                    expect(res.chapters).to.not.be.empty;
-
-                    const pubIDs = pubChapters.map(c => c.id);
-
-                    expect(res.chapters.map(c => c.id))
-                        .to.have.members([
-                            ...pubChapters.map(c => c.id),
-                            ...unpubChapters.map(c => c.id)
-                        ]);
-
-                    expect(res.chapters).to.not.be.empty;
+        it('FetchBook: Do not return chapter MetadataURI and MetadataHash if browser is not book author', function() {
+            return Promise.all([
+                stubBook(userIsNotAuthorStubs).fetchBook(12, reqObj),
+                stubBook(userIsNotAuthorStubs).fetchBook(15, reqObj)
+            ])
+                .then(resArray => {
+                    resArray.forEach(res => {
+                        expect(res.chapters).to.not.be.empty;
+                        res.chapters.forEach(ch => {
+                            expect(ch).to.not.have.property('metadataURI');
+                            expect(ch).to.not.have.property('metadataHash');
+                        });
+                    });
                 });
-            });
+        });
+
+        it('FetchBook: Do not return chapter publish status if browser is not book author', function() {
+            return Promise.all([
+                stubBook(userIsNotAuthorStubs).fetchBook(12, reqObj),
+                stubBook(userIsNotAuthorStubs).fetchBook(15, reqObj)
+            ])
+                .then(resArray => {
+                    resArray.forEach(res => {
+                        expect(res.chapters).to.not.be.empty;
+                        res.chapters.forEach(ch => {
+                            expect(ch).to.not.have.property('published');
+                        });
+                    });
+                });
+        });
+
+        it('FetchBook: Do not return Book MetadataURI and MetadataHash if browser is NOT book author', function() {
+            const mod1 = stubBook({book}).fetchBook(12, reqObj),
+                mod2 = stubBook({getSession: 17, book}).fetchBook(15, reqObj)
+
+            return Promise.all([
+                mod1, mod2
+            ])
+                .then(resArray => {
+                    expect(resArray).to.not.be.empty;
+                    resArray.forEach(res => {
+                        expect(res).to.not.have.property('metadataURI');
+                        expect(res).to.not.have.property('metadataHash');
+                    });
+                });
+        });
     });
 
     it('FetchBook: Do not return unpublished chapters if browser is not author', function() {
@@ -470,28 +378,6 @@ describe('Testing book module', function() {
         });
     });
 
-    it('FetchBook: should return chapters[] content urls if book author is browsing', function() {
-        const author = 1;
-        const bookID = 42
-        const book = {...testData.books[7], author };
-
-        const chapters = testData.chapters.slice(1,5);
-
-        const stubs = createStubs({getSession: author})
-        stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
-        stubs[paths.chapterDal].fetchAll = sinon.fake.resolves(chapters);
-
-        const bookModule = stubBook(stubs);
-
-        return bookModule.fetchBook(bookID)
-            .then(res => {
-                expect(res).to.have.property('chapters').that.has.lengthOf(chapters.length);
-                res.chapters.forEach((c, i) => {
-                    expect(c).to.have.property('contentURL', chapters[i].contentURL);
-                });
-            });
-    });
-
     it('FetchBook: do not  return chapters[] content urls if user is not book author', function() {
         const author = 1;
         const bookID = 42
@@ -519,16 +405,6 @@ describe('Testing book module', function() {
                     expect(c).to.not.have.property('contentURL');
                 });
             });
-    });
-
-    describe.only('Book is for sale', function() {
-        it('FetchBook: user has token');
-
-        it('FetchBook: user has not token');
-
-        it("FetchBook: do not return any of book's chapters")
-
-        it("FetchChapter: user does not have book token so do not return chapter's content, or url");
     });
 
     /**
@@ -630,19 +506,6 @@ describe('Testing book module', function() {
     });
 
     describe('Actions', function() {
-        it('FetchBook - Published: return canSell if browser is book author', function() {
-            const author = 1;
-            const book = {...testData.books[7], author, published: true };
-
-            const stubs = createStubs({getSession: author, book})
-
-            return stubBook(stubs).fetchBook(12)
-                .then(res => {
-                    expect(res).to.have.property('_actions')
-                        .that.has.property('canSell', true);
-                });
-        });
-
         it('FetchBook - Published: do not return canSell if browser is not book author', function() {
             const id = 42
             const book = {...testData.books[7], id, author:1, published: true };
@@ -653,53 +516,6 @@ describe('Testing book module', function() {
                 .then(res => {
                     expect(res).to.have.property('_actions')
                         .that.does.not.have.property('canSell', true);
-                });
-        });
-
-        it('FetchBook - Unpublished: do not return canSell if book is not published', function() {
-            const author = 1;
-            const bookID = 42
-            const book = {...testData.books[7], author, published: false };
-
-            const stubs1 = createStubs({getSession: author, book})
-
-            return stubBook(stubs1).fetchBook(bookID)
-                .then(res => {
-                    expect(res, 'browser is author').to.have.property('_actions')
-                        .that.does.not.have.property('canSell');
-
-                    const stubs2 = createStubs({getSession: 5, book})
-                    return stubBook(stubs2).fetchBook(bookID)
-                })
-                .then(res => {
-                    expect(res, 'browser is not author').to.have.property('_actions')
-                        .that.does.not.have.property('canSell');
-                });
-        });
-
-        it('FetchBook - CanPublish: return true if author is browsing and book is unpublished', function() {
-            const user = 15;
-            const book = {...testData.books[7], author:user, published: false };
-
-            const stubs = createStubs({getSession: user, book})
-
-            return stubBook(stubs).fetchBook(12)
-                .then(res => {
-                    expect(res).to.have.property('_actions')
-                        .that.has.property('canPublish', true);
-                });
-        });
-
-        it('FetchBook - CanPublish: return false if author is browsing and book is already published', function() {
-            const user = 15;
-            const book = {...testData.books[7], author:user, published: true };
-
-            const stubs = createStubs({getSession: user, book})
-
-            return stubBook(stubs).fetchBook(12)
-                .then(res => {
-                    expect(res).to.have.property('_actions')
-                        .that.does.not.have.property('canPublish');
                 });
         });
 

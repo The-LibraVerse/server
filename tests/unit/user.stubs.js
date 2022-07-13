@@ -6,6 +6,7 @@ const paths = {
     session: '../sessionManager',
     sessionManager: '../sessionManager',
     libraryDal: '../books/library.dal',
+    erc1155: '../api/erc1155',
 }
 
 const userPath = '../../src/user/user';

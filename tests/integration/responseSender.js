@@ -9,7 +9,7 @@ const request = require('supertest');
 
 const routes = require('../../src/routes');
 
-describe('ResponseSender module: integration tests', function() {
+describe.only('ResponseSender module: integration tests', function() {
     let app;
     beforeEach(() => {
         app = express();
@@ -34,7 +34,10 @@ describe('ResponseSender module: integration tests', function() {
 
         function editRoute(_actions) {
             app.get(routes.fetchBook, function(req, res) {
-                return res.send({ _actions, });
+                return res.send({
+                    chapters: testData.chapters,
+                    _actions,
+                });
             });
         }
 
@@ -63,6 +66,23 @@ describe('ResponseSender module: integration tests', function() {
                             href: '/book/3/chapters',
                             method: 'POST'
                         });
+                });
+        });
+
+        it('if canViewChapters, return chapter._links._self', function() {
+            editRoute({canViewChapters: true})
+
+            return request(app).get(route)
+                .then(res => {
+                    expect(res.body).to.have.property('chapters').that.is.not.empty;
+
+                    res.body.chapters.forEach(chapter => {
+                        expect(chapter).to.have.property('_links')
+                            .that.has.property('_self')
+                        expect(chapter._link._self).to.have.property('href')
+                            .that.startsWith('/book/3/chapter/');
+                        expect(chapter._link._self).to.have.property('method', 'GET')
+                    });
                 });
         });
 

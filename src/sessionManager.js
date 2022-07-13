@@ -4,7 +4,10 @@ module.exports = {
     },
     get(req) {
         if(req && req.session && req.session.user_id)
-            return { userID: req.session.user_id }
+            return {
+                userID: req.session.user_id,
+                address: req.session.address || null
+            }
         else return false;
     },
 

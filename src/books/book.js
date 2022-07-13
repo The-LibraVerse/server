@@ -8,30 +8,33 @@ const chapterDAL = require('./chapter.dal');
 const sessionManager = require('../sessionManager');
 const { ClientError, UnauthorizedError } = require('../errors');
 
+const erc1155 = require('../api/erc1155');
+
 function formatChapter(c) {
     const { title, id, contentURL, content, cover,
         published, forSale, tokenContract, tokenID,
         metadataURI, metadataHash,  } = c;
 
     return {
-        id,
-        title,
-        cover,
+        ...(id !== undefined) && {id},
+        ...(title !== undefined) && {title},
+        ...cover && {cover},
         ...contentURL && {contentURL},
         ...content && {content},
         ...(published != null) && {published},
         ...(forSale != null) && {forSale},
-        ...tokenContract && {tokenContract},
-        ...tokenID && {tokenID},
-        metadataURI: metadataURI || null,
-        metadataHash,
+        tokenContract,
+        tokenID,
+        ...(metadataURI !== undefined) && {metadataURI},
+        ...(metadataHash !== undefined) && {metadataHash},
     }
+
 }
 
 function formatBook(b) {
     const { id, title, cover,
         published, forSale, tokenContract, tokenID,
-        metadataURI } = b;
+        metadataURI,metadataHash } = b;
 
     let author = (typeof b.author == 'number') ?  {id: b.author} :
         (typeof b.author == 'string') ?  {id: b.author} :
@@ -42,9 +45,10 @@ function formatBook(b) {
         author,
         ...(published != null) && {published},
         ...(forSale != null) && {forSale},
-        ...tokenContract && {tokenContract},
-        ...tokenID && {tokenID},
-        ...metadataURI && {metadataURI},
+        tokenContract,
+        tokenID,
+        ...(metadataURI !== undefined) && {metadataURI},
+        ...(metadataHash !== undefined) && {metadataHash},
     }
 }
 
@@ -310,28 +314,40 @@ module.exports = Object.freeze({
     fetchBook(bookID, reqObj) {
         const session = sessionManager.get(reqObj);
 
-        const bookActions = {}; // Actions that can be taken on the book
+        // Actions that can be taken on the book
+        const actions={canView: true,canViewChapters: true};
+        const otherResponse = {};
 
         let totalChapters=0, chapters = [], book;
 
         return bookDal.fetchByID(bookID)
             .then(res => {
-                book = res;
-                if(session.userID == book.author) {
-                    // Can add actions
+                book = {...res};
+                if(book.forSale) {
+                    // console.log('bok is for sale:', book.forSale);
 
-                    if(book.published) {
-                        bookActions.canSell = true;
-                    } else {
-                        bookActions.canPublish = true;
-                    }
-                } else {
-                    delete book.published;
-                    // delete c.contentURL;
-                }
-                if(book.metadataHash)
-                    book.metadataURI = ipfsAPI.hashToURL(book.metadataHash);
+                    actions.canView = false;
+                    actions.canViewChapters = false;
+                    if(book.tokenContract && book.tokenID) {
+                        if(session.address) {
+                            return erc1155.balance(session.address, book.tokenContract, book.tokenID)
+                                .then(res => {
+                                    if(res > 0) {
+                                        // console.log('has enought tokens');
+                                        actions.canView = true;
+                                        actions.canViewChapters = true;
+                                    } else {
+                                        // console.log('has zero tokens');
+                                        otherResponse._message = 'You do not have the token required to view this book';
+                                        otherResponse._code = 'TOEKN_REQUIRED';
+                                    }
+                                });
+                        } else return Promise.resolve()
 
+                    } else return Promise.resolve()
+                } else return Promise.resolve()
+
+            }).then(() => {
                 return chapterDAL.fetchCount(bookID)
             })
             .then(res => {
@@ -342,29 +358,62 @@ module.exports = Object.freeze({
                 return chapterDAL.fetchAll(bookID)
             }).then(res => {
                 chapters = [ ...res ];
-                chapters = chapters.map(_c => {
-                    const c = Object.assign({}, _c);
-
-                    if(session.userID == book.author) {
-                        // Can add actions
-                    } else {
-                        delete c.contentURL;
-                    }
-                    return c;
-                });
-
-                if(session.userID != book.author) {
-                    chapters = chapters.filter(c => c.published === true);
-                }
-
-                chapters = chapters.map(c => formatChapter(c))
                 return fetchAuthors([book])
             })
             .then(res => {
-                res = res[0];
+                book = res[0];
+                // console.log('book:', book);
 
-                return {...res,
-                    _actions: bookActions,
+                if(session.userID == book.author.id) {
+                    // console.log('is author');
+                    actions.canSell = false, actions.canPublish=false;
+
+                    actions.canView = true; actions.canViewChapters = true;
+
+                    if(book.published) {
+                        actions.canSell = true;
+                    } else {
+                        actions.canPublish = true;
+                    }
+
+                    if(book.metadataHash)
+                        book.metadataURI = ipfsAPI.hashToURL(book.metadataHash);
+                    else {
+                        book.metadataHash = null;
+                        book.metadataURI = null;
+                    }
+
+                    delete otherResponse._code;
+                    delete otherResponse._message;
+
+                } else {
+                    chapters = chapters.filter(c => c.published === true)
+                        .map(_c => {
+                            let c = Object.assign({}, _c);
+
+                            delete c.metadataURI;
+                            delete c.metadataHash;
+                            delete c.contentURL;
+                            delete c.published;
+                            return c;
+                        });
+
+                    if(!actions.canViewChapters)
+                        chapters = chapters.map(c => ({ id:c.id, title:c.title, published:c.published }));
+
+                    delete book.published;
+                    delete book.metadataHash;
+                    delete book.metadataURI;
+                    // delete c.contentURL;
+                }
+
+                // console.log('other response:', otherResponse);
+
+                chapters = chapters.map(c => formatChapter(c))
+
+                return {...book,
+                    ...otherResponse,
+                    _actions: actions,
                     chapters,
                     totalChapters
                 };
@@ -379,6 +428,7 @@ module.exports = Object.freeze({
                     .map(_b => {
                         const b = Object.assign({}, _b);
                         delete b.published;
+                        delete b.metadataURI;
                         return b;
                     })
                 )
@@ -405,7 +455,6 @@ module.exports = Object.freeze({
                 return libraryDal.fetch(userID)
             })
             .then(res => {
-                // console.log('res:', res);
                 myBooks.library = res.map(e => {
                     const { bookTitle: title, bookID:id, bookCover: cover, bookAuthor: author,
                         forSale,

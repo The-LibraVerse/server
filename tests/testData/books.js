@@ -13,23 +13,27 @@ for (let i=0; i<30; i++) {
     const title = faker.music.songName();
     const cover = faker.image.image();
 
-    const published = (i % 5 == 2) ? false :
-        (i == 3 || id == 14) ? true : faker.datatype.boolean();
+    const published = (id % 5 == 2) ? false :
+        (id == 4 || id == 14) ? true : faker.datatype.boolean();
 
-    const forSale = !published ? false : faker.datatype.boolean();
+    const forSale = !published ? false :
+        (published && (id == 4 || id == 14)) ? true : faker.datatype.boolean();
+
+    const tokenContract = forSale ? faker.finance.ethereumAddress() : null;
+    const tokenID = forSale ? faker.datatype.number() : null;
 
     const metadataHash = !published ? null : 'bafybe' + faker.random.alphaNumeric(53);
     const metadataURI = metadataHash ? 'http://' + metadataHash + '.ipfs.localhost:8080' : null;
 
     books.push({
         id,
+        title,
         author,
         cover,
-        title,
         published,
         forSale,
-        metadataURI,
-        metadataHash,
+        metadataURI, metadataHash,
+        tokenContract, tokenID,
     });
 }
 

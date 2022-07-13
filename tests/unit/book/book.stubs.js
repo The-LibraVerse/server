@@ -1,5 +1,5 @@
 const proxyquire = require('proxyquire');
-const masterStubs = require('./stubs');
+const masterStubs = require('../stubs');
 
 const paths = {
     bookDal: './book.dal',
@@ -13,9 +13,10 @@ const paths = {
     user: '../user',
     userModule: '../user',
     userDal: '../user',
+    erc1155: '../api/erc1155',
 }
 
-const bookPath = '../../src/books/book';
+const bookPath = '../../../src/books/book';
 
 function isValidStubs(stubs) {
     return stubs && stubs[paths.session] && stubs[paths.userDal]
@@ -24,7 +25,9 @@ function isValidStubs(stubs) {
 
 function createStubs(stubsInit) {
     const allStubs = masterStubs(stubsInit);
+
     return {
+        [paths.erc1155]: allStubs.erc1155,
         [paths.session]: allStubs.sessionManager,
         [paths.userDal]: {
             userDal: allStubs.userDal,

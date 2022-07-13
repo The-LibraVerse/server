@@ -1,6 +1,7 @@
 const dal = require('../../src/books/book.dal');
 const { expect } = require('chai');
 const { faker } = require('@faker-js/faker');
+const testData = require('../testData');
 
 describe('Book data access layer', function() {
     it('Create and FetchByID', function() {
@@ -13,6 +14,25 @@ describe('Book data access layer', function() {
                 return dal.fetchByID(res.id)
             }).then(res => {
                 expect(res).to.have.property('title', title);
+            });
+    });
+
+    it('FetchByID should return book data', function() {
+        const book = testData.books[4];
+
+        return dal.fetchByID(book.id)
+            .then(res => {
+                expect(res).to.have.keys('id', 'title', 'cover', 'published',
+                    'forSale', 'tokenContract', 'tokenID', 'metadataURI', 'metadataHash',
+                    'author');
+                expect(res).to.have.property('id', book.id);
+                expect(res).to.have.property('title', book.title);
+                expect(res).to.have.property('cover', book.cover);
+                expect(res).to.have.property('forSale', book.forSale);
+                expect(res).to.have.property('published', book.published);
+                expect(res).to.have.property('tokenID', book.tokenID);
+                expect(res).to.have.property('tokenContract', book.tokenContract);
+                expect(res).to.have.property('metadataHash', book.metadataHash);
             });
     });
 

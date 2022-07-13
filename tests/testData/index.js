@@ -14,6 +14,7 @@ module.exports = {
     library: libraries,
     users,
     books,
+
     chapters,
     publishedChapters, unpublishedChapters,
 }
