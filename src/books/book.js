@@ -315,7 +315,7 @@ module.exports = Object.freeze({
         const session = sessionManager.get(reqObj);
 
         // Actions that can be taken on the book
-        const actions={canView: true,canViewChapters: true};
+        const actions={canView:true, canViewChapters:true};
         const otherResponse = {};
 
         let totalChapters=0, chapters = [], book;

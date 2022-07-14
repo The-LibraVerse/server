@@ -9,7 +9,7 @@ const request = require('supertest');
 
 const routes = require('../../src/routes');
 
-describe.only('ResponseSender module: integration tests', function() {
+describe('ResponseSender module: integration tests', function() {
     let app;
     beforeEach(() => {
         app = express();
@@ -79,9 +79,14 @@ describe.only('ResponseSender module: integration tests', function() {
                     res.body.chapters.forEach(chapter => {
                         expect(chapter).to.have.property('_links')
                             .that.has.property('_self')
-                        expect(chapter._link._self).to.have.property('href')
+                            .that.has.keys('href', 'method')
+
+                        expect(chapter._links._self).to.have.property('href')
                             .that.startsWith('/book/3/chapter/');
-                        expect(chapter._link._self).to.have.property('method', 'GET')
+                        expect(chapter._links._self.href).to.equal('/book/3/chapter/' + chapter.id);
+                        expect(chapter._links._self.href).to.match(/\d+$/);
+                        expect(chapter._links._self.href).to.not.contain('undefined');
+                        expect(chapter._links._self).to.have.property('method', 'GET')
                     });
                 });
         });

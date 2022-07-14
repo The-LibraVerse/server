@@ -96,5 +96,9 @@ describe('Testing book module: Viewing books/chapters that are for sale', functi
         });
 
         it("FetchBook: do not return any of book's chapters")
+
+        // IF user does not have the book's token, do not return chapter's content,
+        // but return a _message and a _code
+        it("FetchChapter: user does not have book token so do not return chapter's content, or url");
     });
 });

@@ -8,6 +8,7 @@ module.exports = function(req, res, next) {
         res.send = oldSend;
 
         const unparsedRoute = req.route.path;
+        // console.log('response:', response);
 
         if(response) {
             if(Array.isArray(response))
@@ -46,6 +47,7 @@ module.exports = function(req, res, next) {
 
                 else if(unparsedRoute == routes.fetchBook) {
                     const book_id = req.params.book_id;
+
                     if(actions.canSell === true) {
                         links.sell = {
                             href: '/book/' + book_id + '/sell',
@@ -65,8 +67,19 @@ module.exports = function(req, res, next) {
                         }
                     }
                     if(actions.canViewChapters === true) {
-                        // console.log('chapters', response);
                         const chapters = response.chapters || [];
+                        response.chapters = chapters.map(chapter => {
+                            const chapter_id = chapter.id;
+                            const chLinks = {_self: {
+                                href: '/book/' + book_id + '/chapter/' + chapter_id,
+                                method: 'GET'
+                            }};
+
+                            return {
+                                ...chapter,
+                                _links: chLinks
+                            }
+                        });
                     }
                 }
                 else if(unparsedRoute === routes.fetchChapter) {
