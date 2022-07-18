@@ -115,62 +115,6 @@ describe('Testing book module', function() {
             .to.be.rejectedWith(ClientError);
     });
 
-    it('FetchChapter(): Return content url and metadata url if browser is book author', function() {
-        const author = testData.users[0];
-        const chapter = testData.chapters[4];
-
-        const book = {...testData.books[chapter.bookID], author: author.id};
-
-        const stubs = createStubs({getSession: author.id, fetch: chapter._content})
-
-        stubs[paths.chapterDal].fetchByID = sinon.fake.resolves(chapter);
-        stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
-
-        const bookModule = stubBook(stubs);
-
-        return bookModule.fetchChapter(book.id, chapter.id)
-            .then(res => {
-                expect(res).to.have.property('contentURL', chapter.contentURL);
-                expect(res).to.have.property('metadataURI', chapter.metadataURI);
-                expect(res).to.have.property('metadataURL', chapter.metadataURI);
-            });
-    });
-
-    it('FetchChapter(): Do not return content url and metadata url if browser is not book author', function() {
-        const chapter = testData.chapters[4];
-        const book = testData.books[chapter.bookID];
-
-        const stubs = createStubs({getSession: faker.random.numeric(2)})
-        stubs[paths.chapterDal].fetchByID = sinon.fake.resolves(chapter);
-        stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
-
-        const bookModule = stubBook(stubs);
-
-        return bookModule.fetchChapter(book.id, chapter.id)
-            .then(res => {
-                expect(res).to.not.have.property('contentURL');
-                expect(res).to.not.have.property('metadataURI');
-                expect(res).to.not.have.property('metadataURL');
-            });
-    });
-
-    it('FetchChapter(): Call fn for external fetches to get chapter content', function() {
-        const chapter = testData.chapters[4];
-
-        const spy = sinon.fake.resolves(chapter._content);
-
-        const stubs = createStubs()
-        stubs[paths.fetchExternal].fetch = spy;
-        stubs[paths.chapterDal].fetchByID = sinon.fake.resolves(chapter);
-
-        const book = stubBook(stubs);
-
-        return book.fetchChapter(faker.datatype.number(), faker.datatype.number())
-            .then(res => {
-                sinon.assert.calledWith(spy, chapter.contentURL);
-            });
-    });
-
     it('DeleteChapter(): call chapter dal with delete()', function() {
         // each chapter has a unique id
         const dalSpy = sinon.fake.resolves(true);
@@ -247,8 +191,9 @@ describe('Testing book module', function() {
 
         return stubBook(stubs1).fetchAll()
             .then(res => {
-                expect(res).to.not.be.empty;
-                res.forEach(bk => {
+                const returnedBooks = Object.values(res).flat();
+                expect(returnedBooks).to.not.be.empty;
+                returnedBooks.forEach(bk => {
                     expect(bk).to.not.have.property('published');
                 });
             });
@@ -260,7 +205,10 @@ describe('Testing book module', function() {
 
         return stubBook(stubs1).fetchAll()
             .then(res => {
-                res.forEach(bk => {
+                const returnedBooks = Object.values(res).flat();
+                expect(returnedBooks).to.not.be.empty;
+
+                returnedBooks.forEach(bk => {
                     unpublished.forEach(pb => {
                         // console.log('pb:', pb, '\nbk:', bk);
                         expect(pb.id).to.not.equal(bk.id);

@@ -11,7 +11,7 @@ for (let i=0; i<30; i++) {
 
     const id = i+1;
     const title = faker.music.songName();
-    const cover = faker.image.image();
+    const cover = faker.datatype.boolean() ? null : faker.image.image();
 
     const published = (id % 5 == 2) ? false :
         (id == 4 || id == 14) ? true : faker.datatype.boolean();

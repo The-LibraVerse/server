@@ -34,6 +34,26 @@ router.post(routes.login, function(req, res, next) {
         .catch(e => next(e));
 });
 
+// TODO: wallet login 
+router.post('/login/ethereum-wallet', function(req, res, next) {
+    return res.send(true);
+});
+
+// TODO: wallet login 
+router.get('/connect-wallet', function(req, res, next) {
+    return res.send({
+        message: "I am connecting my wallet to the current sesssion at " + new Date().toISOString(),
+        params: {
+            'message': {
+                type: 'string'
+            },
+            "address": {
+                type: 'address'
+            }
+        }
+    });
+});
+
 router.delete(routes.logout, function(req, res, next) {
     return user.logout(req)
         .then(payload => res.send(payload))
@@ -52,8 +72,6 @@ router.get('/user/:user_id', function(req, res, next) {
         .catch(e => next(e));
 });
 
-// TODO: User dashboard
-
 /**
  * BOOKS
  */
@@ -64,7 +82,23 @@ router.post(routes.createBook, function(req, res, next) {
         .catch(e => next(e));
 });
 
-/** Fetch single book
+/**
+ * TODO: Edit book, route and methods
+ * To edit book cover, title, blurb
+ */
+router.put('/book/:book_id/edit', function(req, res, next) {
+    return res.send(true)
+});
+
+/**
+ * TODO: Edit chapter, route and methods
+ * To edit book cover, title, content_url, and preview if it is for sale
+ */
+router.put('/chapter/:chapter_id/edit', function(req, res, next) {
+    return res.send(true)
+});
+
+/** Fetch
  */
 router.get(routes.fetchBook, function(req, res, next) {
     return book.fetchBook(req.params.book_id, req)
@@ -72,10 +106,8 @@ router.get(routes.fetchBook, function(req, res, next) {
         .catch(e => next(e));
 });
 
-/** Add book to library
- */
-router.get('/book/:book_id/add-to-library', function(req, res, next) {
-    return book.addToLibrary(req.params.book_id, req)
+router.get(routes.fetchBooks, function(req, res, next) {
+    return book.fetchAll()
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });
@@ -87,15 +119,28 @@ router.put(routes.publishBook, function(req, res, next) {
         .catch(e => next(e));
 });
 
-// Publish chapter
-router.put(routes.publishChapter, function(req, res, next) {
-    return book.publishChapter(req.params.chapter_id, req)
+router.post('/book/:book_id/sell', function(req, res, next) {
+    return book.listForSale(req.params.book_id, req.body, req)
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });
 
-router.get(routes.fetchBooks, function(req, res, next) {
-    return book.fetchAll()
+/** Add book to library
+ */
+router.put('/book/:book_id/add-to-library', function(req, res, next) {
+    return book.addToLibrary(req.params.book_id, req)
+        .then(payload => res.send(payload))
+        .catch(e => next(e));
+});
+
+// TODO: Delete book from library
+router.delete('/book/:book_id/library/delete', function(req, res, next) {
+    return res.send(true);
+});
+
+// Publish chapter
+router.put(routes.publishChapter, function(req, res, next) {
+    return book.publishChapter(req.params.chapter_id, req)
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });
@@ -120,12 +165,6 @@ router.get('/user/:user_id/books', function(req, res, next) {
 
 router.get('/user/:user_id/books/creations', function(req, res, next) {
     return book.createdBy(req.params.user_id)
-        .then(payload => res.send(payload))
-        .catch(e => next(e));
-});
-
-router.post('/book/:book_id/sell', function(req, res, next) {
-    return book.listForSale(req.params.book_id, req.body, req)
         .then(payload => res.send(payload))
         .catch(e => next(e));
 });

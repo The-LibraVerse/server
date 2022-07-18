@@ -25,7 +25,7 @@ function createChapters() {
 
     for (let i=1; i<= numChapters; i++) {
         const numParagraphs = faker.random.numeric(2);
-        const content = faker.lorem.paragraphs(numParagraphs);
+        const content = '<p>' + faker.lorem.paragraphs(numParagraphs, "</p><p>") + '</p>';
 
         chapters.push({ content });
     }

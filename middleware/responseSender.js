@@ -48,6 +48,12 @@ module.exports = function(req, res, next) {
                 else if(unparsedRoute == routes.fetchBook) {
                     const book_id = req.params.book_id;
 
+                    if(actions.canEdit === true) {
+                        links.edit = {
+                            href: '/book/' + book_id + '/edit',
+                            method: 'PUT',
+                        }
+                    }
                     if(actions.canSell === true) {
                         links.sell = {
                             href: '/book/' + book_id + '/sell',
@@ -88,6 +94,12 @@ module.exports = function(req, res, next) {
                         links.sell = {
                             href: '/book/' + bk + '/chapter/' + ch + '/sell',
                             method: 'POST'
+                        }
+                    }
+                    if(actions.canEdit === true) {
+                        links.edit = {
+                            href: '/chapter/' + ch + '/edit',
+                            method: 'PUT',
                         }
                     }
                     if(actions.canPublish === true) {

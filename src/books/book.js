@@ -32,7 +32,7 @@ function formatChapter(c) {
 }
 
 function formatBook(b) {
-    const { id, title, cover,
+    const { id, title, cover, description,
         published, forSale, tokenContract, tokenID,
         metadataURI,metadataHash } = b;
 
@@ -41,7 +41,7 @@ function formatBook(b) {
         (typeof b.author == 'object') ? b.author : null;
 
     return {
-        id, title, cover,
+        id, title, cover, description,
         author,
         ...(published != null) && {published},
         ...(forSale != null) && {forSale},
@@ -289,13 +289,26 @@ module.exports = Object.freeze({
 
                 if(book.author && session && book.author.id === session.userID) {
                     actions.canSell = true;
+                    actions.canEdit=true;
 
                     if(chapter.metadataHash) {
                         chapter.metadataURI = ipfsAPI.hashToURL(chapter.metadataHash);
                         chapter.metadataURL = ipfsAPI.hashToURL(chapter.metadataHash);
                     }
+
+                    console.log(chapter.metadataURI);
+                    if(!chapter.published || !chapter.metadataURI)
+                        actions.canSell = false;
+                    if(!book.published)
+                        actions.canSell = false;
                 }
                 else {
+                    if(chapter.forSale) {
+                        chapter._notice = {
+                            message: 'You need to have token id ' + chapter.tokenID + 'to view this chapter.  Connect your wallet to see if you have the tokens required to view this chapter',
+                            code: 'TOKEN_REQUIRED'
+                        }
+                    }
                     delete chapter.contentURL;
                     delete chapter.metadataURI;
                     delete chapter.metadataHash;
@@ -315,7 +328,7 @@ module.exports = Object.freeze({
         const session = sessionManager.get(reqObj);
 
         // Actions that can be taken on the book
-        const actions={canView:true, canViewChapters:true};
+        const actions={canView:true, canViewChapters:true, canCreateChapter:false};
         const otherResponse = {};
 
         let totalChapters=0, chapters = [], book;
@@ -329,6 +342,10 @@ module.exports = Object.freeze({
                     actions.canView = false;
                     actions.canViewChapters = false;
                     if(book.tokenContract && book.tokenID) {
+                        otherResponse._notice = {
+                            message: 'You do not have the token required to view this book',
+                            code: 'TOKEN_REQUIRED'
+                        }
                         if(session.address) {
                             return erc1155.balance(session.address, book.tokenContract, book.tokenID)
                                 .then(res => {
@@ -339,10 +356,11 @@ module.exports = Object.freeze({
                                     } else {
                                         // console.log('has zero tokens');
                                         otherResponse._message = 'You do not have the token required to view this book';
-                                        otherResponse._code = 'TOEKN_REQUIRED';
+                                        otherResponse._code = 'TOKEN_REQUIRED';
                                     }
                                 });
                         } else return Promise.resolve()
+                        // TODO: else if !session.address, add message and code, or notice
 
                     } else return Promise.resolve()
                 } else return Promise.resolve()
@@ -366,12 +384,18 @@ module.exports = Object.freeze({
 
                 if(session.userID == book.author.id) {
                     // console.log('is author');
+                    delete otherResponse._notice;
+
                     actions.canSell = false, actions.canPublish=false;
 
                     actions.canView = true; actions.canViewChapters = true;
+                    actions.canEdit=true;
+                    actions.canCreateChapter=true;
 
                     if(book.published) {
                         actions.canSell = true;
+                        if(book.forSale)
+                            actions.canSell = false;
                     } else {
                         actions.canPublish = true;
                     }
@@ -427,12 +451,24 @@ module.exports = Object.freeze({
                     res.filter(b => b.published)
                     .map(_b => {
                         const b = Object.assign({}, _b);
+                        b.description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Sed viverra ipsum nunc aliquet.';
+                        // console.log('b:', b);
+
                         delete b.published;
                         delete b.metadataURI;
                         return b;
                     })
                 )
             })
+            .then(res => {
+                return {
+                    popular: res,
+                    topPaid: res,
+                    topFree: res,
+                    featured: res,
+                    continueReading: res,
+                }
+            });
     },
 
     addToLibrary(bookID, sessionObj) {

@@ -91,6 +91,17 @@ describe('ResponseSender module: integration tests', function() {
                 });
         });
 
+        it('if canEdit, return _links.edit', function() {
+            editRoute({canEdit: true})
+
+            return request(app).get(route)
+                .then(res => {
+                    expect(res.body._links).to.have.property('edit')
+                        .that.has.property('href');
+                    expect(res.body._links.edit).to.have.property('method', 'PUT');
+                });
+        });
+
         it('Can publish', function() {
             editRoute({canPublish: true});
             return request(app).get(route)
@@ -125,6 +136,17 @@ describe('ResponseSender module: integration tests', function() {
                             href: '/book/3/chapter/43/sell',
                             method: 'POST'
                         });
+                });
+        });
+
+        it('if canEdit, return _links.edit', function() {
+            editRoute({canEdit: true})
+
+            return request(app).get(route)
+                .then(res => {
+                    expect(res.body._links).to.have.property('edit')
+                        .that.has.property('href');
+                    expect(res.body._links.edit).to.have.property('method', 'PUT');
                 });
         });
 

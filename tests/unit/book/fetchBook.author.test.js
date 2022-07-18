@@ -4,6 +4,7 @@ const sinon = require('sinon');
 const { faker } = require('@faker-js/faker');
 const { createStubs, stubBook, paths } = require('./book.stubs');
 const testData = require('../../testData');
+const code = require('../../../src/codes');
 
 describe('Testing book module: FetchBook when user is author', function() {
     const reqObj = JSON.parse(faker.datatype.json());
@@ -52,7 +53,7 @@ describe('Testing book module: FetchBook when user is author', function() {
 
             return stubbedBookModule.fetchBook(15, reqObj)
                 .then(res => {
-                    expect(res).to.have.keys('id', 'title', 'cover', 'published', 'metadataURI', 'metadataHash',
+                    expect(res).to.have.keys('id', 'title', 'description', 'cover', 'published', 'metadataURI', 'metadataHash',
                         'author', 'chapters', 'totalChapters', 'forSale', 'tokenID', 'tokenContract',
                         '_actions'
                     );
@@ -88,11 +89,28 @@ describe('Testing book module: FetchBook when user is author', function() {
             return stubbedBookModule.fetchBook(15, reqObj)
                 .then(res => {
                     expect(res._actions).to.have.keys(
-                        'canSell', 'canPublish', 'canView', 'canViewChapters'
+                        'canSell', 'canPublish', 'canView', 'canViewChapters',
+                        'canCreateChapter', 'canEdit'
                     );
                     expect(res._actions).to.have.property('canView', true);
                     expect(res._actions).to.have.property('canViewChapters', true);
                 });
+        });
+    });
+
+    describe('Notices', function() {
+        testCases.forEach(testCase => {
+            it('FetchBook should never return a ' + code.tokenRequired + ' to author: ' + testCase.title, function() {
+                const stubbedBookModule = setupStubModuleWithTestCase(testCase);
+
+                return stubbedBookModule.fetchBook(15, reqObj)
+                    .then(res => {
+                        const notice = res.notice || res._notice || res.notices || res._notices;
+
+                        if(notice)
+                            expect(notice).to.not.have.property('code', code.tokenRequired);
+                    });
+            });
         });
     });
 
@@ -107,6 +125,34 @@ describe('Testing book module: FetchBook when user is author', function() {
                 .then(res => {
                     expect(res).to.have.property('_actions')
                         .that.has.property('canSell', true);
+                });
+        });
+
+        it.only('FetchBook - CanSell = false: if book is for sale', function() {
+            const author = 1;
+            const book = testData.books.filter(b => {
+                return b.published && b.tokenID && b.forSale && /^0x[\w\d]+$/.test(b.tokenContract);
+            })[0];
+
+            const stubs = createStubs({getSession: author, book})
+
+            return stubBook(stubs).fetchBook(12)
+                .then(res => {
+                    expect(res).to.have.property('_actions')
+                        .that.has.property('canSell', false);
+                });
+        });
+
+        it('FetchBook - CanCreateChapter = true: if browser is book author', function() {
+            const author = 1;
+            const book = {...testData.books[7], author, published: true };
+
+            const stubs = createStubs({getSession: author, book})
+
+            return stubBook(stubs).fetchBook(12)
+                .then(res => {
+                    expect(res).to.have.property('_actions')
+                        .that.has.property('canCreateChapter', true);
                 });
         });
 
