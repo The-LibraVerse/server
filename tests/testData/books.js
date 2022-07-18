@@ -25,11 +25,14 @@ for (let i=0; i<30; i++) {
     const metadataHash = !published ? null : 'bafybe' + faker.random.alphaNumeric(53);
     const metadataURI = metadataHash ? 'http://' + metadataHash + '.ipfs.localhost:8080' : null;
 
+    const views = 0;
+
     books.push({
         id,
         title,
         author,
         cover,
+        views,
         published,
         forSale,
         metadataURI, metadataHash,

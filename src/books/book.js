@@ -34,7 +34,7 @@ function formatChapter(c) {
 function formatBook(b) {
     const { id, title, cover, description,
         published, forSale, tokenContract, tokenID,
-        metadataURI,metadataHash } = b;
+        metadataURI,metadataHash, views } = b;
 
     let author = (typeof b.author == 'number') ?  {id: b.author} :
         (typeof b.author == 'string') ?  {id: b.author} :
@@ -43,6 +43,7 @@ function formatBook(b) {
     return {
         id, title, cover, description,
         author,
+        views,
         ...(published != null) && {published},
         ...(forSale != null) && {forSale},
         tokenContract,
@@ -335,7 +336,13 @@ module.exports = Object.freeze({
 
         return bookDal.fetchByID(bookID)
             .then(res => {
+                console.log('views:', res);
                 book = {...res};
+                book.views++;
+                // Update book view counter
+                return bookDal.update(bookID, {views: book.views})
+            }).then(() => {
+                console.log('udated:', book);
                 if(book.forSale) {
                     // console.log('bok is for sale:', book.forSale);
 

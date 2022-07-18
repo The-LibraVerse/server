@@ -152,14 +152,14 @@ describe.only('Book module: integration tests', function() {
             });
     });
 
-    it('FetchBook should return book data', function() {
+    it.only('FetchBook should return book data', function() {
         const book = testData.books[3], bookID = book.id;
         const chapters = testData.chapters.filter(c => c.bookID == bookID);
         const totalChapters = chapters.length;
 
         return bookModule.fetchBook(bookID)
             .then(res => {
-                expect(res).to.have.keys('id', 'cover', 'title', 'author',
+                expect(res).to.have.keys('id', 'cover', 'title', 'author', 'views', 'description', 'metadataHash',
                     'published', 'forSale', 'metadataURI', 'totalChapters', 'chapters',
                     '_actions', 'tokenID', 'tokenContract'
                 );
@@ -169,6 +169,7 @@ describe.only('Book module: integration tests', function() {
                 expect(res).to.have.property('cover', book.cover);
                 expect(res).to.have.property('published', book.published);
                 expect(res).to.have.property('metadataURI', book.metadataURI);
+                expect(res).to.have.property('views', 1);
 
                 expect(res).to.have.property('forSale', book.forSale);
                 expect(res).to.have.property('tokenContract', book.tokenContract);
@@ -193,6 +194,7 @@ describe.only('Book module: integration tests', function() {
                 return bookModule.fetchBook(3)
             })
             .then(res => {
+                expect(res).to.have.property('views', 2);
                 expect(res.forSale).to.be.false;
                 expect(res.tokenContract).to.be.null;
                 expect(res.tokenID).to.be.null;

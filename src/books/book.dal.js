@@ -2,8 +2,10 @@ const db = require('../../config/database')();
 const table = 'books';
 
 const columnAliases = {
-    title: 'title',
+    views: 'views',
     cover: 'cover',
+    description: 'description',
+    title: 'title',
     published: 'published',
     forSale: 'for_sale',
     tokenContract: 'token_contract',
@@ -20,22 +22,24 @@ function normaliseResult(data) {
     }
 
     return data.map(datum => {
-        const { _id, cover, title, author,
+        const { _id, cover, title, description, author,
             published, for_sale:forSale=null,
             token_contract: tokenContract=null, token_id: tokenID,
-            metadata_uri:metadataURI, metadata_hash:metadataHash } = datum;
+            metadata_uri:metadataURI, metadata_hash:metadataHash, views } = datum;
 
         return {
             id: _id,
             ...(forSale != null) && {forSale},
             cover,
             tokenContract,
+            description,
             tokenID,
             metadataURI,
             metadataHash,
             title,
             published,
             author,
+            views,
         }
     });
 }

@@ -26,6 +26,47 @@ describe('Testing book module: FetchBook: other', function() {
             });
     });
 
+    it('FetchBook: Update book view count', function() {
+        const author = 1;
+        const published = faker.datatype.boolean();
+        const book = {...testData.books[7], author, published };
+
+        const spyUpdate = sinon.fake.resolves(true);
+
+        const stubs1 = createStubs({book: {...book, views: 17}}),
+            stubs2 = createStubs({getSession: 17, book: {...book, views:0}});
+
+        stubs1[paths.bookDal].update = spyUpdate;
+        stubs2[paths.bookDal].update = spyUpdate;
+
+        return stubBook(stubs1).fetchBook(book.id, reqObj)
+            .then(() => {
+                sinon.assert.calledWith(spyUpdate, book.id, {views: 18});
+                return stubBook(stubs2).fetchBook(book.id, reqObj)
+            })
+            .then(resArray => {
+                sinon.assert.calledWith(spyUpdate, book.id, {views: 1});
+            });
+    });
+
+    it('FetchBook: Return updated book count', function() {
+        const author = 1;
+        const published = faker.datatype.boolean();
+        const book = {...testData.books[7], author, published };
+
+        const stubs1 = createStubs({book: {...book, views: 17}}),
+            stubs2 = createStubs({getSession: 17, book: {...book, views:0}});
+
+        return stubBook(stubs1).fetchBook(book.id, reqObj)
+            .then(res => {
+                expect(res).to.have.property('views', 18);
+                return stubBook(stubs2).fetchBook(book.id, reqObj)
+            })
+            .then(res => {
+                expect(res).to.have.property('views', 1);
+            });
+    });
+
     describe('Returning book metadata', function() {
         const author = 12;
         const book = {
