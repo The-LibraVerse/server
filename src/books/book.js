@@ -468,10 +468,13 @@ module.exports = Object.freeze({
                 )
             })
             .then(res => {
+                const topPaid = res.filter(b => b.forSale == true && b.tokenID);
+                const topFree = res.filter(b => b.forSale == false && !b.tokenID);
+
                 return {
                     popular: res,
-                    topPaid: res,
-                    topFree: res,
+                    topPaid,
+                    topFree,
                     featured: res,
                     continueReading: res,
                 }

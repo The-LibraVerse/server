@@ -199,6 +199,32 @@ describe('Testing book module', function() {
             });
     });
 
+    it.only("FetchAll: Top Free should be only free books", function() {
+        const stubs1 = createStubs();
+
+        return stubBook(stubs1).fetchAll()
+            .then(res => {
+                expect(res).to.have.property('topFree').that.is.an('array');
+                res.topFree.forEach(bk => {
+                    expect(bk).to.have.property('forSale', false);
+                    expect(bk).to.have.property('tokenID', null);
+                });
+            });
+    });
+
+    it.only("FetchAll: Top Paid should be only paid books", function() {
+        const stubs1 = createStubs();
+
+        return stubBook(stubs1).fetchAll()
+            .then(res => {
+                expect(res).to.have.property('topPaid').that.is.an('array');
+                res.topPaid.forEach(bk => {
+                    expect(bk).to.have.property('forSale', true);
+                    expect(bk).to.have.property('tokenID').that.is.a('number');
+                });
+            });
+    });
+
     it('FetchAll: should return books that are published', function() {
         const stubs1 = createStubs();
         const unpublished = testData.books.filter(bk => bk.published != true);
