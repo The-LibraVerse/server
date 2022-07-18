@@ -5,7 +5,7 @@ const sinon = require('sinon');
 const proxyquire = require('proxyquire');
 const fetch = require('../helpers/fetch');
 
-describe.only('Book module: integration tests', function() {
+describe('Book module: integration tests', function() {
     let bookModule;
     const userID = 1;
 
@@ -152,7 +152,7 @@ describe.only('Book module: integration tests', function() {
             });
     });
 
-    it.only('FetchBook should return book data', function() {
+    it('FetchBook should return book data', function() {
         const book = testData.books[3], bookID = book.id;
         const chapters = testData.chapters.filter(c => c.bookID == bookID);
         const totalChapters = chapters.length;

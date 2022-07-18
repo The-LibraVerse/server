@@ -31,8 +31,8 @@ function normaliseResult(data) {
             id: _id,
             ...(forSale != null) && {forSale},
             cover,
-            tokenContract,
             description,
+            tokenContract,
             tokenID,
             metadataURI,
             metadataHash,
@@ -46,8 +46,8 @@ function normaliseResult(data) {
 
 module.exports = {
     create(data) {
-        const query = `INSERT INTO ${table} (title, author, cover) VALUES($1, $2, $3) RETURNING *`;
-        const values = [data.title, data.author, data.cover];
+        const query = `INSERT INTO ${table} (title, description, author, cover) VALUES($1, $2, $3, $4) RETURNING *`;
+        const values = [data.title, data.description, data.author, data.cover];
 
         return db.query(query, values)
             .then(res => {
@@ -102,7 +102,7 @@ module.exports = {
             });
     },
 
-    fetchAll() {
+    fetchAll(orderBy, mode='asc') {
         const query = `SELECT * FROM ${table}`;
 
         return db.query(query)

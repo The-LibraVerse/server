@@ -3,8 +3,8 @@ const { expect } = require('chai');
 const { faker } = require('@faker-js/faker');
 const testData = require('../testData');
 
-describe.only('Book data access layer', function() {
-    it.only('Create and FetchByID', function() {
+describe('Book data access layer', function() {
+    it('Create and FetchByID', function() {
         const title = faker.lorem.words(), description = faker.lorem.paragraph();
         const author = 3;
 
@@ -18,12 +18,12 @@ describe.only('Book data access layer', function() {
             });
     });
 
-    it.only('FetchByID should return book data', function() {
+    it('FetchByID should return book data', function() {
         const book = testData.books[4];
 
         return dal.fetchByID(book.id)
             .then(res => {
-                expect(res).to.have.keys('id', 'title', 'cover', 'published',
+                expect(res).to.have.keys('id', 'title', 'cover', 'published', 'views',
                     'forSale', 'tokenContract', 'tokenID', 'metadataURI', 'metadataHash',
                     'views', 'author');
                 expect(res).to.have.property('id', book.id);
@@ -40,6 +40,13 @@ describe.only('Book data access layer', function() {
 
     it('FetchAll', function() {
         return dal.fetchAll()
+            .then(res => {
+                expect(res).to.have.lengthOf.at.least(30);
+            });
+    });
+
+    it('FetchAll: order by views', function() {
+        return dal.fetchAll('views', 'desc')
             .then(res => {
                 expect(res).to.have.lengthOf.at.least(30);
             });
