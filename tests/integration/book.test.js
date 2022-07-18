@@ -5,7 +5,7 @@ const sinon = require('sinon');
 const proxyquire = require('proxyquire');
 const fetch = require('../helpers/fetch');
 
-describe('Book module: integration tests', function() {
+describe.only('Book module: integration tests', function() {
     let bookModule;
     const userID = 1;
 

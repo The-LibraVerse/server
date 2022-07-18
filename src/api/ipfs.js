@@ -1,8 +1,8 @@
-const { IPFS_GATEWAY } = require('../constants');
+const { IPFS_GATEWAY, IPFS_API } = require('../constants');
 
 async function loadIpfs() {
     const { create } = await import('ipfs-http-client');
-    return create();
+    return create(IPFS_API);
 }
 
 function getGateway() {
