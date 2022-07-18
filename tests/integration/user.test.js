@@ -76,7 +76,7 @@ describe('User module: integration tests - Fetch', function() {
                         expect(b, 'Books written by user').to.have.keys(
                             'id', 'title', 'cover', 'author',
                             'published', 'forSale', 'metadataURI', 'metadataHash',
-                            'tokenContract', 'tokenID'
+                            'tokenContract', 'tokenID', 'views', 'description'
                         );
                         expect(b.title).to.be.a('string');
                         expect(b.author).to.have.property('id', userID);

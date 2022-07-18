@@ -48,7 +48,14 @@ describe('Book data access layer', function() {
     it('FetchAll: order by views', function() {
         return dal.fetchAll('views', 'desc')
             .then(res => {
-                expect(res).to.have.lengthOf.at.least(30);
+                res.forEach((bk, index) => {
+
+                    const nextIndex = index + 1;
+
+                    if(nextIndex < res.length) {
+                        expect(res[index].views).to.be.greaterThan(res[nextIndex].views);
+                    }
+                });
             });
     });
 

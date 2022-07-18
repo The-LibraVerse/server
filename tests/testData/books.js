@@ -12,6 +12,7 @@ for (let i=0; i<30; i++) {
     const id = i+1;
     const title = faker.music.songName();
     const cover = faker.datatype.boolean() ? null : faker.image.image();
+    const description = faker.datatype.boolean() ? null : faker.lorem.paragraphs();
 
     const published = (id % 5 == 2) ? false :
         (id == 4 || id == 14) ? true : faker.datatype.boolean();
@@ -25,11 +26,12 @@ for (let i=0; i<30; i++) {
     const metadataHash = !published ? null : 'bafybe' + faker.random.alphaNumeric(53);
     const metadataURI = metadataHash ? 'http://' + metadataHash + '.ipfs.localhost:8080' : null;
 
-    const views = 0;
+    const views = faker.datatype.number();
 
     books.push({
         id,
         title,
+        description,
         author,
         cover,
         views,

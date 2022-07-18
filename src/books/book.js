@@ -456,7 +456,6 @@ module.exports = Object.freeze({
                     res.filter(b => b.published)
                     .map(_b => {
                         const b = Object.assign({}, _b);
-                        b.description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Sed viverra ipsum nunc aliquet.';
                         // console.log('b:', b);
 
                         delete b.published;

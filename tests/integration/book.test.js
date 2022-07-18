@@ -205,11 +205,13 @@ describe('Book module: integration tests', function() {
         return bookModule.fetchAll()
             .then(res => {
                 expect(res).to.not.be.empty;
+                res = Object.values(res).flat();
+
                 res.forEach((b, i) => {
                     const bk = testData.books.filter(b_ => b_.id == b.id)[0];
 
                     expect(b).to.have.keys('id', 'cover', 'title', 'author',
-                        'forSale', 'tokenContract', 'tokenID');
+                        'forSale', 'tokenContract', 'tokenID', 'views', 'description');
                     expect(b).to.have.property('id', bk.id);
                     expect(b).to.have.property('cover', bk.cover);
                     expect(b).to.have.property('title', bk.title);

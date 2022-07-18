@@ -33,10 +33,10 @@ function main() {
     }
 
     {
-        let  query = `INSERT INTO books(_id, title, cover, author,
+        let  query = `INSERT INTO books(_id, title, cover, description, author,
             published, for_sale,
             token_contract, token_id,
-            metadata_uri, metadata_hash)
+            metadata_uri, metadata_hash, views)
         VALUES `;
 
         const values = [];
@@ -45,16 +45,16 @@ function main() {
             if(i > 0)
                 query += ',';
 
-            const j = i * 10;
+            const j = i * 12;
 
             query += `(
-                $${j + 1}, $${j + 2}, $${j + 3}, $${j + 4}, $${j + 5}, $${j + 6}, $${j + 7}, $${j + 8}, $${j+9}, $${j+10})`;
+                $${j + 1}, $${j + 2}, $${j + 3}, $${j + 4}, $${j + 5}, $${j + 6}, $${j + 7}, $${j + 8}, $${j+9}, $${j+10}, $${j+11}, $${j+12}) `;
 
             values.push(
-                book.id, book.title, book.cover, book.author,
+                book.id, book.title, book.cover, book.description, book.author,
                 book.published, book.forSale,
                 book.tokenContract, book.tokenID,
-                book.metadataURI, book.metadataHash,
+                book.metadataURI, book.metadataHash, book.views
             );
         });
 

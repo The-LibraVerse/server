@@ -103,7 +103,27 @@ module.exports = {
     },
 
     fetchAll(orderBy, mode='asc') {
-        const query = `SELECT * FROM ${table}`;
+        let query = `SELECT * FROM ${table}`;
+
+        if(orderBy) {
+            let orderQuery = '';
+
+            if(!Array.isArray(orderBy))
+                orderBy = [orderBy];
+
+            Object.keys(columnAliases).forEach((alias, i) => {
+                if(orderBy.includes(alias)) {
+                    if(i > 0)
+                        orderQuery += ', ';
+
+                    orderQuery += ' ' + columnAliases[alias] + ' ';  
+                }
+            })
+
+            if(orderQuery.length > 1)
+                query += ' ORDER BY ' + orderQuery + mode;
+
+        }
 
         return db.query(query)
             .then(res => normaliseResult(res.rows));
