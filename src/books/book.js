@@ -450,7 +450,7 @@ module.exports = Object.freeze({
     },
 
     fetchAll() {
-        return bookDal.fetchAll()
+        return bookDal.fetchAll('views', 'desc')
             .then(res => {
                 return fetchAuthors(
                     res.filter(b => b.published)
