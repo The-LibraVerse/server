@@ -158,6 +158,7 @@ module.exports = Object.freeze({
             .then(res => {
                 const metadata = {
                     name: res.title,
+                    description: res.description,
                     image: res.cover,
                 };
 
@@ -172,6 +173,7 @@ module.exports = Object.freeze({
             .then(res => {
                 const metadata = {
                     name: res.title,
+                    description: "Part of a book on the Libraverse website",
                     image: res.cover,
                 };
 
