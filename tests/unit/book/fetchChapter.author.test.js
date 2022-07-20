@@ -50,6 +50,44 @@ describe('Testing book module: FetchChapter as author', function() {
             });
     });
 
+    it('FetchChapter(): actions.canPublish should be true if chapter is not published', function() {
+        const chapter = {...testData.chapters[4], published: false};
+
+        const book = {...testData.books[chapter.bookID], author: author.id, published: true};
+
+        const stubs = createStubs({getSession: author.id, fetch: chapter._content})
+
+        stubs[paths.chapterDal].fetchByID = sinon.fake.resolves(chapter);
+        stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
+
+        const bookModule = stubBook(stubs);
+
+        return bookModule.fetchChapter(book.id, chapter.id)
+            .then(res => {
+                console.log('res.published:', res.published, 'canPublish:', res._actions.canPublish);
+                expect(res).to.have.property('_actions').that.has.property('canPublish', true);
+            });
+    });
+
+    it('FetchChapter(): actions.canPublish should be false if chapter is published', function() {
+        const chapter = {...testData.chapters[4], published: true};
+
+        const book = {...testData.books[chapter.bookID], author: author.id, published: true};
+
+        const stubs = createStubs({getSession: author.id, fetch: chapter._content})
+
+        stubs[paths.chapterDal].fetchByID = sinon.fake.resolves(chapter);
+        stubs[paths.bookDal].fetchByID = sinon.fake.resolves(book);
+
+        const bookModule = stubBook(stubs);
+
+        return bookModule.fetchChapter(book.id, chapter.id)
+            .then(res => {
+                console.log('res.published:', res.published, 'canPublish:', res._actions.canPublish);
+                expect(res).to.have.property('_actions').that.has.property('canPublish', false);
+            });
+    });
+
     it('FetchChapter(): actions.canSell should be false if book is not published', function() {
         const chapter = testData.chapters[4];
 

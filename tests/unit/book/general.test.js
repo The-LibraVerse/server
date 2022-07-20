@@ -199,7 +199,7 @@ describe('Testing book module', function() {
             });
     });
 
-    it.only("FetchAll: Top Free should be only free books", function() {
+    it("FetchAll: Top Free should be only free books", function() {
         const stubs1 = createStubs();
 
         return stubBook(stubs1).fetchAll()
@@ -212,7 +212,7 @@ describe('Testing book module', function() {
             });
     });
 
-    it.only("FetchAll: Top Paid should be only paid books", function() {
+    it("FetchAll: Top Paid should be only paid books", function() {
         const stubs1 = createStubs();
 
         return stubBook(stubs1).fetchAll()

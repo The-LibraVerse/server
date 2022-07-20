@@ -128,7 +128,7 @@ describe('Testing book module: FetchBook when user is author', function() {
                 });
         });
 
-        it.only('FetchBook - CanSell = false: if book is for sale', function() {
+        it('FetchBook - CanSell = false: if book is for sale', function() {
             const author = 1;
             const book = testData.books.filter(b => {
                 return b.published && b.tokenID && b.forSale && /^0x[\w\d]+$/.test(b.tokenContract);

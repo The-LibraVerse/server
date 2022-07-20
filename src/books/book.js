@@ -293,6 +293,7 @@ module.exports = Object.freeze({
                 if(book.author && session && book.author.id === session.userID) {
                     actions.canSell = true;
                     actions.canEdit=true;
+                    actions.canPublish=false;
 
                     if(chapter.metadataHash) {
                         chapter.metadataURI = ipfsAPI.hashToURL(chapter.metadataHash);
@@ -300,10 +301,14 @@ module.exports = Object.freeze({
                     }
 
                     console.log(chapter.metadataURI);
-                    if(!chapter.published || !chapter.metadataURI)
+                    console.log('publhsd:', chapter.published);
+                    if(!chapter.published || !chapter.metadataURI) {
                         actions.canSell = false;
-                    if(!book.published)
+                        actions.canPublish = true;
+                    }
+                    if(!book.published) {
                         actions.canSell = false;
+                    }
                 }
                 else {
                     if(chapter.forSale) {
