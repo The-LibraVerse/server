@@ -39,6 +39,10 @@ router.post('/login/ethereum-wallet', function(req, res, next) {
     return res.send(true);
 });
 
+router.put('/connect-wallet', function(req, res, next) {
+    req.session.address = req.body.address;
+});
+
 // TODO: wallet login 
 router.get('/connect-wallet', function(req, res, next) {
     return res.send({
