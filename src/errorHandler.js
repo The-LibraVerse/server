@@ -1,4 +1,4 @@
-const { ClientError, UnauthorizedError } = require('./errors');
+const { ClientError, OtherError, UnauthorizedError } = require('./errors');
 
 module.exports = function(e, req, res, next) {
     let error = {};
@@ -6,12 +6,15 @@ module.exports = function(e, req, res, next) {
 
     res.status(500);
 
-    if(e instanceof ClientError || e instanceof UnauthorizedError) {
+    if(e instanceof ClientError || e instanceof UnauthorizedError || e instanceof OtherError) {
         error = e.message;
         if(e instanceof ClientError)
             res.status(400);
         else if(e instanceof UnauthorizedError)
             res.status(401);
+        else if(e instanceof OtherError)
+            res.status(500);
+
     } else
         console.log(e);
 

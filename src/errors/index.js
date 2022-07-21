@@ -12,4 +12,12 @@ class UnauthorizedError extends Error {
     }
 }
 
-module.exports = { ClientError, UnauthorizedError }
+class OtherError extends Error {
+    constructor(args) {
+        super(args);
+        this.name = 'Other'
+    }
+}
+
+module.exports = { ClientError, OtherError, UnauthorizedError }
+

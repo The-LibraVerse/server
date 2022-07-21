@@ -6,7 +6,7 @@ const libraryDal = require('../books/library.dal');
 const { userDal } = require('../user');
 const chapterDAL = require('./chapter.dal');
 const sessionManager = require('../sessionManager');
-const { ClientError, UnauthorizedError } = require('../errors');
+const { ClientError, OtherError, UnauthorizedError } = require('../errors');
 
 const erc1155 = require('../api/erc1155');
 
@@ -163,6 +163,8 @@ module.exports = Object.freeze({
                 };
 
                 return ipfsAPI.uploadSingle(JSON.stringify(metadata))
+            }).catch(e => {
+                throw new OtherError('Error uploading book metadata to IPFS. Please try again later');
             }).then(res => {
                 return bookDal.update(bookID, {metadataHash: res.cidv1, published: true})
             });
