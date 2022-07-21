@@ -62,7 +62,7 @@ module.exports = {
         let setColStr = '';
 
         for(let alias in columnAliases) {
-            if(data[alias]) {
+            if(data[alias] != null) {
                 if(i > 2)
                     setColStr += ', ';
 
