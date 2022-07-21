@@ -349,10 +349,7 @@ module.exports = Object.freeze({
         return bookDal.fetchByID(bookID)
             .then(res => {
                 book = {...res};
-                book.views++;
-                // Update book view counter
-                return bookDal.update(bookID, {views: book.views})
-            }).then(() => {
+
                 if(book.forSale) {
                     // console.log('bok is for sale:', book.forSale);
 
@@ -433,6 +430,7 @@ module.exports = Object.freeze({
                     delete otherResponse._message;
 
                 } else {
+                    book.views++;
                     chapters = chapters.filter(c => c.published === true)
                         .map(_c => {
                             let c = Object.assign({}, _c);
@@ -456,6 +454,10 @@ module.exports = Object.freeze({
                 // console.log('other response:', otherResponse);
 
                 chapters = chapters.map(c => formatChapter(c))
+
+                // Update book view counter
+                return bookDal.update(bookID, {views: book.views})
+            }).then(() => {
 
                 return {...book,
                     ...otherResponse,

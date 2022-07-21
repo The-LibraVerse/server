@@ -20,7 +20,7 @@ describe('Testing book module: Viewing books/chapters that are for sale', functi
             chapters = testData.publishedChapters;
 
 
-        it.only('FetchBook: Return link to book token', function() {
+        it('FetchBook: Return link to book token', function() {
             const user = testData.users[13];
 
             const bookModule = stubBook({ book, getSession: user, erc1155:1 });
