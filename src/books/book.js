@@ -8,6 +8,8 @@ const chapterDAL = require('./chapter.dal');
 const sessionManager = require('../sessionManager');
 const { ClientError, OtherError, UnauthorizedError } = require('../errors');
 
+const { ETHEREUM_TOKEN_URL_TEMPLATE, CONTRACT_ADDRESS } = require('../constants');
+
 const erc1155 = require('../api/erc1155');
 
 function formatChapter(c) {
@@ -33,7 +35,7 @@ function formatChapter(c) {
 
 function formatBook(b) {
     const { id, title, cover, description,
-        published, forSale, tokenContract, tokenID,
+        published, forSale, tokenContract, tokenID, tokenURL,
         metadataURI,metadataHash, views } = b;
 
     let author = (typeof b.author == 'number') ?  {id: b.author} :
@@ -48,6 +50,7 @@ function formatBook(b) {
         ...(forSale != null) && {forSale},
         tokenContract,
         tokenID,
+        tokenURL,
         ...(metadataURI !== undefined) && {metadataURI},
         ...(metadataHash !== undefined) && {metadataHash},
     }
@@ -356,6 +359,11 @@ module.exports = Object.freeze({
                     actions.canView = false;
                     actions.canViewChapters = false;
                     if(book.tokenContract && book.tokenID) {
+                        const tokenAddr = book.tokenContract;
+                        const urlTemplate = ETHEREUM_TOKEN_URL_TEMPLATE;
+
+                        book.tokenURL = urlTemplate.replace('{address}', tokenAddr);
+                        book.tokenURL = book.tokenURL.replace('{id}', book.tokenID);
                         otherResponse._notice = {
                             message: 'You do not have the token required to view this book',
                             code: 'TOKEN_REQUIRED'

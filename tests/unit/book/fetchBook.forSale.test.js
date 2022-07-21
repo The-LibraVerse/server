@@ -20,6 +20,20 @@ describe('Testing book module: Viewing books/chapters that are for sale', functi
             chapters = testData.publishedChapters;
 
 
+        it.only('FetchBook: Return link to book token', function() {
+            const user = testData.users[13];
+
+            const bookModule = stubBook({ book, getSession: user, erc1155:1 });
+
+            return bookModule.fetchBook(book.id)
+                .then(res => {
+                    const tokenAddr = res.tokenContract;
+                    console.log('res token adr:', res.tokenAddress, tokenAddr);
+                    console.log('tokenURL', `https://etherscan.io/nft/${tokenAddr}/${book.tokenID}`);
+                    expect(res).to.have.property('tokenURL', `https://etherscan.io/nft/${tokenAddr}/${book.tokenID}`);
+                });
+        });
+
         it('FetchBook: If user has token, return other chapter details', function() {
             const user = testData.users[13];
 
